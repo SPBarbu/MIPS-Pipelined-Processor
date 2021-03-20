@@ -44,4 +44,13 @@ begin
         wait;
     end process;
 
-end arch;
+    reading_process : process (i_memread)
+    begin
+        if (rising_edge(i_memread)) then
+            o_waitrequest <= '0' after MEM_DELAY, '1' after MEM_DELAY + CLOCK_PERIOD;
+        end if;
+    end process;
+
+    o_readdata <= instructions_ram_block(i_address + 3) & instructions_ram_block(i_address + 2) & instructions_ram_block(i_address + 1) & instructions_ram_block(i_address)
+
+    end arch;
