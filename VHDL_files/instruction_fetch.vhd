@@ -28,10 +28,10 @@ end component;
 --2 to 1 multiplexer
 component if_mux is
 port(
-    input0 : in std_logic_vector(31 downto 0);
-    input1 : in std_logic_vector(31 downto 0);
-    select : in std_logic;
-    output : out std_logic_vector(31 downto 0)
+    mux_input0 : in std_logic_vector(31 downto 0);
+    mux_input1 : in std_logic_vector(31 downto 0);
+    mux_select : in std_logic;
+    mux_output : out std_logic_vector(31 downto 0)
 );
 end component;
 
@@ -40,8 +40,8 @@ component if_pc is
 port(
     clk : in std_logic;
     reset : in std_logic;
-    input : in std_logic_vector(31 downto 0);
-    output : out std_logic_vector(31 downto 0) := (others => '0')
+    pc_input : in std_logic_vector(31 downto 0);
+    pc_output : out std_logic_vector(31 downto 0) := (others => '0')
 );
 end component;
 
@@ -83,18 +83,18 @@ begin
 
     multiplexer : if_mux
     port map(
-        input0 => if_add_output,
-        input1 => if_mux_input1,
-        select => if_mux_select,
-        output => if_pc_input
+        mux_input0 => if_add_output,
+        mux_input1 => if_mux_input1,
+        mux_select => if_mux_select,
+        mux_output => if_pc_input
     );
 
     program_counter : if_pc
     port map(
         clk => clk,
         reset => if_pc_reset,
-        input => if_pc_input,
-        output => if_pc_output
+        pc_input => if_pc_input,
+        pc_output => if_pc_output
     );
 
 end arch;
