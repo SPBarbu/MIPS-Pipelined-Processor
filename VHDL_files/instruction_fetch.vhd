@@ -46,9 +46,13 @@ port(
 end component;
 
 --instruction memory
-component ***** is
+component instruction_memory is
 port(
-
+    i_clock : in std_logic;
+    i_address : in integer range 0 to RAM_SIZE - 1;
+    i_memread : in std_logic;
+    o_readdata : out std_logic_vector (31 downto 0);
+    o_waitrequest : out std_logic
 );
 end component;
 
@@ -93,27 +97,4 @@ begin
         output => if_pc_output
     );
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 end arch;
-
-
