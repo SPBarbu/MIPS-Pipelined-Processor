@@ -51,6 +51,6 @@ begin
         end if;
     end process;
 
-    o_readdata <= instructions_ram_block(i_address + 3) & instructions_ram_block(i_address + 2) & instructions_ram_block(i_address + 1) & instructions_ram_block(i_address)
+    o_readdata <= instructions_ram_block(i_address + 3) & instructions_ram_block(i_address + 2) & instructions_ram_block(i_address + 1) & instructions_ram_block(i_address);
 
     end arch;
