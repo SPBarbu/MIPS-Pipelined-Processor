@@ -280,3 +280,7 @@ Assembler/assembler_main/binary_instructions/_DS_Store
 Assembler/assembler_main/binary_instructions/_gitignore
 Assembler/assembler_main/binary_instructions/instruction_types/_gitignore
 Assembler/assembler_main/binary_instructions/toolset/_gitignore
+
+**/work/**
+!**/work/_info
+/VHDL_files/*.mti
