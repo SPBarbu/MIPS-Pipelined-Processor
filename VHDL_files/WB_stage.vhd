@@ -23,5 +23,10 @@ end WB_stage;
 
 architecture behavior of WB_stage is
 begin
-
+    test_propagate_opcode : process (clock)
+    begin
+        if (rising_edge(clock)) then
+            report "WB instruction: " & integer'image(to_integer(unsigned(current_instruction)));
+        end if;
+    end process;
 end;

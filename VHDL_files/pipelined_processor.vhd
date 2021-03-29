@@ -60,7 +60,8 @@ architecture behavior of pipelined_processor is
         );
     end component;
 
-    signal clock : std_logic;
+    signal clock : std_logic := '0';
+    signal clock_period : time := 1 ns;
     --interstage signals
     signal IF_ID_instruction_data : std_logic_vector(31 downto 0);
     signal ID_EX_instruction : std_logic_vector(5 downto 0);
@@ -126,5 +127,13 @@ begin
         register_reference_wb => WB_ID_register_reference,
         write_register => WB_ID_write_register
     );
+
+    clock_process : process
+    begin
+        clock <= '0';
+        wait for clock_period/2;
+        clock <= '1';
+        wait for clock_period/2;
+    end process;
 
 end;
