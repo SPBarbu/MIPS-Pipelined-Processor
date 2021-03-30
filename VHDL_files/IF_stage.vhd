@@ -12,22 +12,16 @@ entity IF_stage is
 end IF_stage;
 
 architecture behavior of IF_stage is
-    signal count : integer range 0 to 63;
+    signal instruction_data_buffer : std_logic_vector(31 downto 0) := (others => '0');--TODO initialize to stall
 begin
-    --set the upcode with the random data
-    instruction_data <= std_logic_vector(to_unsigned(count, 6)) & "00000000000000000000000000";
-    --populate the pipeline with random data until connecting with instruction memory
-    random_populate_instructions : process (clock)
+    IF_logic_process : process (clock)
     begin
         if (rising_edge(clock)) then
-            report "IF instruction: " & integer'image(count);
-            if count = 63 then
-                count <= 0;
-            elsif count >= 0 then
-                count <= count + 1;
-            else
-                count <= 0;
-            end if;
+            -- TODO logic for the IF stage. Write the values for the next stage on the buffer signals
+            -- Because signal values are only updated at the end of the process, those values will be available to ID on the next clock cycle only
         end if;
     end process;
+
+    instruction_data <= instruction_data_buffer;
+
 end;

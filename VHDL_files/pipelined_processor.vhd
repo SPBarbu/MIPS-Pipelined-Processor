@@ -77,6 +77,11 @@ architecture behavior of pipelined_processor is
     signal WB_ID_immediate_data : std_logic_vector(31 downto 0);
     signal WB_ID_register_reference : std_logic_vector (4 downto 0);
     signal WB_ID_write_register : std_logic;
+    --BTW:to monitor a signal from a component:
+    -->expose it as an output of the component
+    -->add a reference signal here
+    -->map the output to the reference in the port map of the component in this file
+    -->add the reference signal to the wave in the tcl file in the AddWave function
 begin
     pm_if : IF_stage
     port map(
@@ -130,6 +135,8 @@ begin
 
     clock_process : process
     begin
+        --TODO remove. Keep only while testing
+        --simulate clock
         clock <= '0';
         wait for clock_period/2;
         clock <= '1';

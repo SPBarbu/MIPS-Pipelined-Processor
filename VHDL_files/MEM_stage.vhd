@@ -22,15 +22,23 @@ entity MEM_stage is
 end MEM_stage;
 
 architecture behavior of MEM_stage is
-    signal opcode_buffer : std_logic_vector(5 downto 0) := "000000"; --should be initialized to stall
+    signal instruction_next_stage_buffer : std_logic_vector(5 downto 0) := (others => '0');--TODO initialize to stall
+    signal immediate_data_mem_out_buffer : std_logic_vector(31 downto 0) := (others => '0');--TODO initialize to stall
+    signal register_reference_next_stage_buffer : std_logic_vector (4 downto 0) := (others => '0');--TODO initialize to stall
 begin
-    instruction_next_stage <= opcode_buffer;
-
-    test_propagate_opcode : process (clock)
+    MEM_logic_process : process (clock)
     begin
         if (rising_edge(clock)) then
-            opcode_buffer <= current_instruction;
-            report "MEM instruction: " & integer'image(to_integer(unsigned(opcode_buffer)));
+            --propagate unchanged values to next stage
+            instruction_next_stage_buffer <= current_instruction;
+            register_reference_next_stage_buffer <= register_reference_current;
+            -- TODO logic for the MEM stage. Write the values for the next stage on the buffer signals.
+            -- Because signal values are only updated at the end of the process, those values will be available to WB on the next clock cycle only
         end if;
     end process;
+
+    instruction_next_stage <= instruction_next_stage_buffer;
+    immediate_data_mem_out <= immediate_data_mem_out_buffer;
+    register_reference_next_stage <= register_reference_next_stage_buffer;
+
 end;

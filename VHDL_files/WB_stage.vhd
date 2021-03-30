@@ -22,11 +22,22 @@ entity WB_stage is
 end WB_stage;
 
 architecture behavior of WB_stage is
+    signal immediate_data_wb_buffer : std_logic_vector(31 downto 0) := (others => '0');--TODO initialize to stall
+    signal register_reference_wb_buffer : std_logic_vector(4 downto 0) := (others => '0');--TODO initialize to stall
+    signal write_register_buffer : std_logic := '0';--TODO initialize to stall
 begin
-    test_propagate_opcode : process (clock)
+    WB_logic_process : process (clock)
     begin
         if (rising_edge(clock)) then
-            report "WB instruction: " & integer'image(to_integer(unsigned(current_instruction)));
+            register_reference_wb_buffer <= register_reference_current;
+            immediate_data_wb_buffer <= immediate_data_mem_in;
+            -- TODO logic for the WB stage. Write the values for the next stage on the buffer signals.
+            -- Because signal values are only updated at the end of the process, those values will be available to ID on the next clock cycle only
         end if;
     end process;
+
+    immediate_data_wb <= immediate_data_wb_buffer;
+    register_reference_wb <= register_reference_wb_buffer;
+    write_register <= write_register_buffer;
+
 end;

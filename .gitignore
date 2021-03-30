@@ -1,3 +1,7 @@
+*
+!*.*
+!*/
+# previous lines ignore files without extension
 
 # Created by https://www.toptal.com/developers/gitignore/api/osx,java,vscode,windows,intellij,assembler,eclipse
 # Edit at https://www.toptal.com/developers/gitignore?templates=osx,java,vscode,windows,intellij,assembler,eclipse
@@ -284,3 +288,4 @@ Assembler/assembler_main/binary_instructions/toolset/_gitignore
 **/work/**
 !**/work/_info
 /VHDL_files/*.mti
+/VHDL_files/*.wlf

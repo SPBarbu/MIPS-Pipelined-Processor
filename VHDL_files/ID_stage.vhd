@@ -25,15 +25,25 @@ entity ID_stage is
 end ID_stage;
 
 architecture behavior of ID_stage is
-    signal opcode_buffer : std_logic_vector(5 downto 0) := "000000"; --should be initialized to stall
+    --buffer signals to be written to at the end of the stage for the next stage
+    signal instruction_decoded_buffer : std_logic_vector(5 downto 0) := (others => '0'); --TODO initialize to stall
+    signal immediate_data_1_buffer : std_logic_vector(31 downto 0) := (others => '0'); --TODO initialize to stall
+    signal immediate_data_2_buffer : std_logic_vector(31 downto 0) := (others => '0'); --TODO initialize to stall
+    signal register_reference_buffer : std_logic_vector (4 downto 0) := (others => '0'); --TODO initialize to stall
 begin
-    instruction_decoded <= opcode_buffer;
-
-    test_propagate_opcode : process (clock)
+    ID_logic_process : process (clock)
     begin
         if (rising_edge(clock)) then
-            opcode_buffer <= instruction_data(31 downto 26);
-            report "ID instruction: " & integer'image(to_integer(unsigned(opcode_buffer)));
+            --propagate opcode to next stage
+            instruction_decoded_buffer <= instruction_data(31 downto 26);
+            -- TODO logic for the ID stage. Write the values for the next stage on the buffer signals.
+            -- Because signal values are only updated at the end of the process, those values will be available to EX on the next clock cycle only
         end if;
     end process;
+
+    instruction_decoded <= instruction_decoded_buffer;
+    immediate_data_1 <= immediate_data_1_buffer;
+    immediate_data_2 <= immediate_data_2_buffer;
+    register_reference <= register_reference_buffer;
+
 end;
