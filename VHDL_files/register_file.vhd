@@ -10,8 +10,8 @@ entity register_file is
         REGISTERS : string := "registers.txt"
     );
     port(
-        read_register_1 : in std_logic_vector(4 downto 0); --register rs from instruction
-        read_register_2 : in std_logic_vector(4 downto 0); --register rt from instruction
+        read_register_1 : in std_logic_vector(31 downto 0); --register rs from instruction
+        read_register_2 : in std_logic_vector(31 downto 0); --register rt from instruction
         write_register : in std_logic_vector(4 downto 0); --register rd from instruction
         write_data : in std_logic_vector(31 downto 0); --contents to write back to register rd
         instruction_type : in std_logic; --bit to determine if register or immediate instruction, 0 for r, 1 for I
@@ -44,19 +44,19 @@ begin
         variable line_vector : std_logic_vector (31 downto 0);
         variable line_count : integer range 0 to REG_NUM-1;
         variable iterator : integer := 0;
-        variable rs <= unsigned(read_register_1);
-        variable rt <= unsigned(read_register_2);
-        variable rd <= unsigned(write_register);
+        variable rs : unsigned(read_register_1);
+        variable rt : unsigned(read_register_2);
+        variable rd : unsigned(write_register);
 
     begin
         file_open(register_content, REGISTERS, read_mode);
-        iterator <= 0;
-        while not endfile(instructions_file) loop
-            readline(instructions_file, line_value);
+        iterator := 0;
+        while not endfile(REGISTERS) loop
+            readline(REGISTERS, line_value);
             read(line_value, line_vector);
-            if (iterator = to_interger(rs))then
+            if (iterator = to_integer(rs))then
                 read_data_1 <= line_vector(31 downto 0);
-            elsif (iterator = to_interger(rt)) then
+            elsif (iterator = to_integer(rt)) then
                 read_data_2 <= line_vector(31 downto 0);
             end if;
         end loop;
@@ -67,10 +67,10 @@ begin
     if instruction_type = '0' then 
         retrieve_write_registers : process
         begin
-            while not endfile(instructions_file) loop
-                readline(instructions_file, line_value);
+            while not endfile(REGISTERS) loop
+                readline(REGISTERS, line_value);
                 read(line_value, line_vector);
-                if rd /= "00000" and (iterator = to_interger(rd)) then --check write register isnt r0
+                if (rd /= "00000") and (iterator = to_integer(rd)) then --check write register isnt r0
                     write_data <= line_vector(31 downto 0);
                 end if;
             end loop;
