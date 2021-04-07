@@ -22,6 +22,8 @@ entity MEM_stage is
 end MEM_stage;
 
 architecture behavior of MEM_stage is
+
+component 
     signal instruction_next_stage_buffer : std_logic_vector(5 downto 0) := (others => '0');--TODO initialize to stall
     signal immediate_data_mem_out_buffer : std_logic_vector(31 downto 0) := (others => '0');--TODO initialize to stall
     signal register_reference_next_stage_buffer : std_logic_vector (4 downto 0) := (others => '0');--TODO initialize to stall
