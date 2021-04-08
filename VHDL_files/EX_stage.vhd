@@ -15,8 +15,6 @@ entity EX_stage is
         -- adder inputs for pc
         ex_adder_input0 : in std_logic_vector(31 downto 0);
         ex_adder_input1 : in std_logic_vector(31 downto 0);
-        -- mux select 
-        ex_mux_select : in std_logic := '0';
         --register reference of current instruction forwarded for writeback
         register_reference_current : in std_logic_vector (4 downto 0);
         ------------------------------------------------------------------------------
@@ -30,6 +28,7 @@ entity EX_stage is
         --ex adder output
         ex_adder_output: out std_logic_vector(31 downto 0);
         --output of zero
+        alu_zero_output: out std_logic := '0'
 
     );
 end EX_stage;
@@ -80,27 +79,20 @@ begin
 
     arithmetic_logic_unit : alu
     port map(
-        alu_input0 : immediate_data_1;
-        alu_input1 : immediate_data_2;
-        alu_output => immediate_data_ex_out;
-        alu_control => alu_instruction;
-        alu_zero : out std_logic := '0'
+        alu_input0 => immediate_data_1,
+        alu_input1 => immediate_data_2,
+        alu_output => immediate_data_ex_out,
+        alu_control => alu_instruction,
+        alu_zero => alu_zero_output
     );
 
     adder : add
     port map(
-        add_input0 => ex_adder_input0
-        add_input1 => shifted_adder_input
+        add_input0 => ex_adder_input0,
+        add_input1 => shifted_adder_input,
         add_output => ex_adder_output
     );
 
-    multiplexer : if_mux
-    port map(
-        mux_input0 => immediate_data_2;
-        mux_input1 => ex_adder_input1;
-        mux_select => ex_mux_select;
-        mux_output => ex_mux_output
-    );
 
 
     EX_logic_process : process (clock)
