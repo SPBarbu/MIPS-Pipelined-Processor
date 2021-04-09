@@ -14,7 +14,7 @@ entity register_file is
         read_register_2 : in std_logic_vector(31 downto 0); --register rt from instruction
         write_register : in std_logic_vector(4 downto 0); --register rd from instruction
         write_data : in std_logic_vector(31 downto 0); --contents to write back to register rd
-        instruction_type : in std_logic; --bit to determine if register or immediate instruction, 0 for r, 1 for I
+        --instruction_type : in std_logic; --bit to determine if register or immediate instruction, 0 for r, 1 for I
         --should there be a reset bit to zero out the register.txt
         read_data_1 : out std_logic_vector(31 downto 0); --contents from register rs
         read_data_2 : out std_logic_vector(31 downto 0) --contents from register rt
@@ -33,8 +33,12 @@ end register_file;
 --!!!!unsure how to handle writing back!!!!
 --!!!should there be a means of zeroing all the registers!!!
 
+--right now this only attempts to implement reading
+--but maybe status bit for writing? also how will the timing of writing work
+
 architecture arch of register_file is
-    type reg is array (REG_NUM-1 downto 0) of std_logic_vector(31 downto 0);
+    type reg_file is array (REG_NUM-1 downto 0) of std_logic_vector(31 downto 0);
+    signal reg_block : reg_file;
 begin
 
     --get read registers regardless of register type, if the register type is r, also get the write register
@@ -44,9 +48,9 @@ begin
         variable line_vector : std_logic_vector (31 downto 0);
         variable line_count : integer range 0 to REG_NUM-1;
         variable iterator : integer := 0;
-        variable rs : unsigned(read_register_1);
-        variable rt : unsigned(read_register_2);
-        variable rd : unsigned(write_register);
+        signal rs : unsigned(read_register_1);
+        signal rt : unsigned(read_register_2);
+        signal rd : unsigned(write_register);
 
     begin
         file_open(register_content, REGISTERS, read_mode);
@@ -54,28 +58,15 @@ begin
         while not endfile(REGISTERS) loop
             readline(REGISTERS, line_value);
             read(line_value, line_vector);
-            if (iterator = to_integer(rs))then
+            iterator := iterator + 1;
+            if (iterator == to_integer(rs))then
                 read_data_1 <= line_vector(31 downto 0);
-            elsif (iterator = to_integer(rt)) then
+            elsif (iterator == to_integer(rt)) then
                 read_data_2 <= line_vector(31 downto 0);
             end if;
+            
         end loop;
     end process;
-
-    --maybe another type of status bit for write_data, since it writes back after the final stage, not during ID
-    --register type instruction requiring writing to destination
-    if instruction_type = '0' then 
-        retrieve_write_registers : process
-        begin
-            while not endfile(REGISTERS) loop
-                readline(REGISTERS, line_value);
-                read(line_value, line_vector);
-                if (rd /= "00000") and (iterator = to_integer(rd)) then --check write register isnt r0
-                    write_data <= line_vector(31 downto 0);
-                end if;
-            end loop;
-        end process;
-    end if;
 
     --writing back
     --need the register from some previous instruction to know where to write as well as the data to write

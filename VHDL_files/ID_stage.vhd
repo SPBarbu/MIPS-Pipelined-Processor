@@ -14,8 +14,10 @@ entity ID_stage is
         --indicate that register value should be overwritten
         write_register : in std_logic;
         ------------------------------------------------------------------------------
-        --opcode of the instruction
+        --opcode of the instruction in case of immediate or jump, funct of instruction in case of register
         instruction_decoded : out std_logic_vector(5 downto 0);
+		    --internal code to represent operation
+		    internal_code : out std_logic_vector(5 downto 0);
         --data for alu operations, or address for memory
         immediate_data_1 : out std_logic_vector(31 downto 0);
         immediate_data_2 : out std_logic_vector(31 downto 0);
@@ -70,20 +72,23 @@ architecture behavior of ID_stage is
     
     --buffer signals to be written to at the end of the stage for the next stage
     signal instruction_decoded_buffer : std_logic_vector(5 downto 0) := (others => '0'); --TODO initialize to stall
+	signal internal_code_buffer : std_logic_vector(5 downto 0) := (others => '0');
     signal immediate_data_1_buffer : std_logic_vector(31 downto 0) := (others => '0'); --TODO initialize to stall
     signal immediate_data_2_buffer : std_logic_vector(31 downto 0) := (others => '0'); --TODO initialize to stall
     signal register_reference_buffer : std_logic_vector (4 downto 0) := (others => '0'); --TODO initialize to stall
+
 begin
     ID_logic_process : process (clock)
     begin
         if (rising_edge(clock)) then
             --propagate opcode to next stage
-            --instruction_decoded_buffer <= instruction_data(31 downto 26);
+            --internal_code_buffer <= instruction_data(31 downto 26);
             -- TODO logic for the ID stage. Write the values for the next stage on the buffer signals.
             -- Because signal values are only updated at the end of the process, those values will be available to EX on the next clock cycle only
 
             --default instruction add $r0, $r0, $r0 to stall
-            instruction_decoded_buffer <= "000001";
+            instruction_decoded_buffer <= "100000"; --funct field of the add instruction
+			      internal_code_buffer <= "000001";
             immediate_data_1_buffer <= (others => '0');
             immediate_data_2_buffer <= (others => '0');
             register_reference_buffer <= "00000";
@@ -92,92 +97,124 @@ begin
 
 			--register type instruction
             if instruction_data(31 downto 26) = "000000" then 
-
-                --destination register is rd field
-                if instruction_data(15 downto 11) /= "00000" then --destination register cant be r0
-                    register_reference_buffer(4 downto 0) <= instruction_data(15 downto 11); --set write register data for all instructions
-                end if;
+			
+				instruction_decoded_buffer <= instruction_data(5 downto 0);
 
                 if instruction_data(5 downto 0) = "100000" then --add instruction
                     immediate_data_1_buffer(4 downto 0) <= instruction_data(25 downto 21);
                     immediate_data_2_buffer(4 downto 0) <= instruction_data(20 downto 16);
-                    instruction_decoded_buffer <= "000001";
+					if instruction_data(15 downto 11) /= "00000" then --destination register cant be r0
+						register_reference_buffer(4 downto 0) <= instruction_data(15 downto 11);
+					end if;
+                    internal_code_buffer <= "000001";
 
                 elsif instruction_data(5 downto 0) = "100010" then  --sub
                     immediate_data_1_buffer(4 downto 0) <= instruction_data(25 downto 21);
                     immediate_data_2_buffer(4 downto 0) <= instruction_data(20 downto 16);
-                    instruction_decoded_buffer <= "000010";
+					if instruction_data(15 downto 11) /= "00000" then
+						register_reference_buffer(4 downto 0) <= instruction_data(15 downto 11); 
+					end if;
+                    internal_code_buffer <= "000010";
 
                 elsif instruction_data(5 downto 0) = "011000" then --mult
                     immediate_data_1_buffer(4 downto 0) <= instruction_data(25 downto 21);
-                    instruction_decoded_buffer <= "000100";
+					immediate_data_2_buffer(4 downto 0) <= instruction_data(20 downto 16);
+                    internal_code_buffer <= "000100";
 
                 elsif instruction_data(5 downto 0) = "011010" then --div
                     immediate_data_1_buffer(4 downto 0) <= instruction_data(25 downto 21);
-                    instruction_decoded_buffer <= "000101";
+					immediate_data_2_buffer(4 downto 0) <= instruction_data(20 downto 16);
+                    internal_code_buffer <= "000101";
 
                 elsif instruction_data(5 downto 0) = "101010" then  --slt
                     immediate_data_1_buffer(4 downto 0) <= instruction_data(25 downto 21);
                     immediate_data_2_buffer(4 downto 0) <= instruction_data(20 downto 16);
-                    instruction_decoded_buffer <= "000110";
+					if instruction_data(15 downto 11) /= "00000" then
+						register_reference_buffer(4 downto 0) <= instruction_data(15 downto 11); 
+					end if;
+                    internal_code_buffer <= "000110";
 
                 elsif instruction_data(5 downto 0) = "100100" then  --and
                     immediate_data_1_buffer(4 downto 0) <= instruction_data(25 downto 21);
                     immediate_data_2_buffer(4 downto 0) <= instruction_data(20 downto 16);
-                    instruction_decoded_buffer <= "001000";
+					if instruction_data(15 downto 11) /= "00000" then
+						register_reference_buffer(4 downto 0) <= instruction_data(15 downto 11); 
+					end if;
+                    internal_code_buffer <= "001000";
 
                 elsif instruction_data(5 downto 0) = "100101" then  --or
                     immediate_data_1_buffer(4 downto 0) <= instruction_data(25 downto 21);
                     immediate_data_2_buffer(4 downto 0) <= instruction_data(20 downto 16);
-                    instruction_decoded_buffer <= "001001";
+					if instruction_data(15 downto 11) /= "00000" then
+						register_reference_buffer(4 downto 0) <= instruction_data(15 downto 11); 
+					end if;
+                    internal_code_buffer <= "001001";
 
                 elsif instruction_data(5 downto 0) = "100111" then  --nor
                     immediate_data_1_buffer(4 downto 0) <= instruction_data(25 downto 21);
                     immediate_data_2_buffer(4 downto 0) <= instruction_data(20 downto 16);
-                    instruction_decoded_buffer <= "001010";
+					if instruction_data(15 downto 11) /= "00000" then
+						register_reference_buffer(4 downto 0) <= instruction_data(15 downto 11); 
+					end if;
+                    internal_code_buffer <= "001010";
 
                 elsif instruction_data(5 downto 0) = "101000" then  --xor
                     immediate_data_1_buffer(4 downto 0) <= instruction_data(25 downto 21);
                     immediate_data_2_buffer(4 downto 0) <= instruction_data(20 downto 16);
-                    instruction_decoded_buffer <= "001011";
+					if instruction_data(15 downto 11) /= "00000" then
+						register_reference_buffer(4 downto 0) <= instruction_data(15 downto 11); 
+					end if;
+                    internal_code_buffer <= "001011";
 
                 elsif instruction_data(5 downto 0) = "010000" then  --mfhi
-                    instruction_decoded_buffer <= "001111";
+					if instruction_data(15 downto 11) /= "00000" then
+						register_reference_buffer(4 downto 0) <= instruction_data(15 downto 11); 
+					end if;
+                    internal_code_buffer <= "001111";
 
                 elsif instruction_data(5 downto 0) = "010010" then  --mflo
-                    instruction_decoded_buffer <= "010000";
+					if instruction_data(15 downto 11) /= "00000" then
+						register_reference_buffer(4 downto 0) <= instruction_data(15 downto 11); 
+					end if;
+                    internal_code_buffer <= "010000";
 
                 elsif instruction_data(5 downto 0) = "000000" then  --sll
                     immediate_data_1_buffer(4 downto 0) <= instruction_data(25 downto 21);
                     immediate_data_2_buffer(4 downto 0) <= instruction_data(10 downto 6);
-                    instruction_decoded_buffer <= "010010";
+					if instruction_data(15 downto 11) /= "00000" then
+						register_reference_buffer(4 downto 0) <= instruction_data(15 downto 11); 
+					end if;
+                    internal_code_buffer <= "010010";
 
                 elsif instruction_data(5 downto 0) = "000010" then  --srl
                     immediate_data_1_buffer(4 downto 0) <= instruction_data(25 downto 21);
                     immediate_data_2_buffer(4 downto 0) <= instruction_data(10 downto 6);
-                    instruction_decoded_buffer <= "010011";
+					if instruction_data(15 downto 11) /= "00000" then
+						register_reference_buffer(4 downto 0) <= instruction_data(15 downto 11); 
+					end if;
+                    internal_code_buffer <= "010011";
 
                 elsif instruction_data(5 downto 0) = "000011" then  --sra
                     immediate_data_1_buffer(4 downto 0) <= instruction_data(25 downto 21);
                     immediate_data_2_buffer(4 downto 0) <= instruction_data(10 downto 6);
-                    instruction_decoded_buffer <= "010100";
+					if instruction_data(15 downto 11) /= "00000" then
+						register_reference_buffer(4 downto 0) <= instruction_data(15 downto 11); 
+					end if;
+                    internal_code_buffer <= "010100";
 
                 elsif instruction_data(5 downto 0) = "001000" then  --jr
-                    if instruction_data(15 downto 11) /= "00000" then --destination register cant be r0
-                        register_reference_buffer(4 downto 0) <= instruction_data(25 downto 21); --overwrite write data for rs
-                    end if;
-					instruction_decoded_buffer <= "011010";
+                    immediate_data_1_buffer(4 downto 0) <= instruction_data(25 downto 21);
+					internal_code_buffer <= "011010";
+					
                 end if;
             
 			--immediate type instruction excluding jumps
             elsif ((instruction_data(31 downto 26) /= "000000") or 
                    (instruction_data(31 downto 26) /= "000010") or 
-                   (instruction_data(31 downto 26) /= "000011")) then 
+                   (instruction_data(31 downto 26) /= "000011")) then
 
-                --destination register is rt field
-                if instruction_data(20 downto 16) /= "00000" then --destination register cant be r0
-                    register_reference_buffer(4 downto 0) <= instruction_data(20 downto 16); --set write register data for all instructions
-                end if;
+				instruction_decoded_buffer <= instruction_data(31 downto 26);
+
 
                 if instruction_data(31 downto 26) = "001000" then --addi instruction
                     immediate_data_1_buffer(4 downto 0) <= instruction_data(25 downto 21);
@@ -186,7 +223,10 @@ begin
                     elsif instruction_data(15 downto 15) = "1" then --if msb is 1, sign extend 1
                         immediate_data_2_buffer <= "1111111111111111" & instruction_data(15 downto 0);
                     end if;
-                    instruction_decoded_buffer <= "000011";
+					if instruction_data(20 downto 16) /= "00000" then 
+						register_reference_buffer(4 downto 0) <= instruction_data(20 downto 16); 
+					end if;
+                    internal_code_buffer <= "000011";
 
                 elsif instruction_data(31 downto 26) = "001010" then  --slti
                     immediate_data_1_buffer(4 downto 0) <= instruction_data(25 downto 21);
@@ -195,26 +235,41 @@ begin
                     elsif instruction_data(15 downto 15) = "1" then 
                         immediate_data_2_buffer <= "1111111111111111" & instruction_data(15 downto 0);
                     end if;
-                    instruction_decoded_buffer <= "000111";
+					if instruction_data(20 downto 16) /= "00000" then 
+						register_reference_buffer(4 downto 0) <= instruction_data(20 downto 16); 
+					end if;
+                    internal_code_buffer <= "000111";
 
                 elsif instruction_data(31 downto 26) = "001100" then --andi
                     immediate_data_1_buffer(4 downto 0) <= instruction_data(25 downto 21);
                     immediate_data_2_buffer <= "0000000000000000" & instruction_data(15 downto 0);
-                    instruction_decoded_buffer <= "001100";
+					if instruction_data(20 downto 16) /= "00000" then 
+						register_reference_buffer(4 downto 0) <= instruction_data(20 downto 16); 
+					end if;
+                    internal_code_buffer <= "001100";
 
                 elsif instruction_data(31 downto 26) = "011010" then --ori
                     immediate_data_1_buffer(4 downto 0) <= instruction_data(25 downto 21);
                     immediate_data_2_buffer <= "0000000000000000" & instruction_data(15 downto 0);
-                    instruction_decoded_buffer <= "001101";
+					if instruction_data(20 downto 16) /= "00000" then 
+						register_reference_buffer(4 downto 0) <= instruction_data(20 downto 16); 
+					end if;
+                    internal_code_buffer <= "001101";
 
                 elsif instruction_data(31 downto 26) = "101010" then  --xori
                     immediate_data_1_buffer(4 downto 0) <= instruction_data(25 downto 21);
                     immediate_data_2_buffer <= "0000000000000000" & instruction_data(15 downto 0);
-                    instruction_decoded_buffer <= "001110";
+					if instruction_data(20 downto 16) /= "00000" then 
+						register_reference_buffer(4 downto 0) <= instruction_data(20 downto 16); 
+					end if;
+                    internal_code_buffer <= "001110";
 
                 elsif instruction_data(31 downto 26) = "001111" then  --lui
                     immediate_data_1_buffer <= instruction_data(15 downto 0) & "0000000000000000";
-                    instruction_decoded_buffer <= "010001";
+					if instruction_data(20 downto 16) /= "00000" then 
+						register_reference_buffer(4 downto 0) <= instruction_data(20 downto 16); 
+					end if;
+                    internal_code_buffer <= "010001";
 
                 elsif instruction_data(31 downto 26) = "100011" then  --lw
                     immediate_data_1_buffer(4 downto 0) <= instruction_data(25 downto 21);
@@ -223,7 +278,7 @@ begin
                     elsif instruction_data(15 downto 15) = "1" then
                         immediate_data_2_buffer <= "1111111111111111" & instruction_data(15 downto 0);
                     end if;
-                    instruction_decoded_buffer <= "010101";
+                    internal_code_buffer <= "010101";
 
                 elsif instruction_data(31 downto 26) = "101011" then  --sw
                     immediate_data_1_buffer(4 downto 0) <= instruction_data(25 downto 21);
@@ -232,40 +287,39 @@ begin
                     elsif instruction_data(15 downto 15) = "1" then 
                         immediate_data_2_buffer <= "1111111111111111" & instruction_data(15 downto 0);
                     end if;
-                    instruction_decoded_buffer <= "010110";
+                    internal_code_buffer <= "010110";
 
+				--need to make a comparison between contents of rs and rt, if equal offset by immediate value
+				--make the comparison here? and then send 1 to take the offset if rs = rt and 0 to not?
+				--similar idea for bne but for rs =/= rt
                 elsif instruction_data(31 downto 26) = "000100" then  --beq
-                    if instruction_data(25 downto 21) /= "00000" then --destination register cant be r0
-                        register_reference_buffer(4 downto 0) <= instruction_data(20 downto 16); --overwrite destination as rs
-                    end if;
                     immediate_data_1_buffer(4 downto 0) <= instruction_data(20 downto 16);
                     if instruction_data(15 downto 15) = "0" then 
                         immediate_data_2_buffer <= "00000000000000" & instruction_data(15 downto 0) & "00";
                     elsif instruction_data(15 downto 15) = "1" then 
                         immediate_data_2_buffer <= "11111111111111" & instruction_data(15 downto 0) & "00";
                     end if;
-                    instruction_decoded_buffer <= "010111";
+                    internal_code_buffer <= "010111";
 
                 elsif instruction_data(31 downto 26) = "000101" then  --bne
-                    if instruction_data(25 downto 21) /= "00000" then --destination register cant be r0
-                        register_reference_buffer(4 downto 0) <= instruction_data(20 downto 16); --overwrite destination as rs
-                    end if;
                     immediate_data_1_buffer(4 downto 0) <= instruction_data(20 downto 16);
                     if instruction_data(15 downto 15) = "0" then 
                         immediate_data_2_buffer <= "00000000000000" & instruction_data(15 downto 0) & "00";
                     elsif instruction_data(15 downto 15) = "1" then 
                         immediate_data_2_buffer <= "11111111111111" & instruction_data(15 downto 0) & "00";
                     end if;
-                    instruction_decoded_buffer <= "011000";
+                    internal_code_buffer <= "011000";
                 end if;
             
             elsif (instruction_data(31 downto 26) = "000010") then --j unconditional jump
                 immediate_data_1_buffer (25 downto 0) <= instruction_data(25 downto 0);
-                instruction_decoded_buffer <= "011010";
+				instruction_decoded_buffer <= "000010";
+                internal_code_buffer <= "011010";
             
             elsif (instruction_data(31 downto 26) = "000011") then --jal
                 immediate_data_1_buffer (25 downto 0) <= instruction_data(25 downto 0);
-                instruction_decoded_buffer <= "011011";
+				instruction_decoded_buffer <= "000011";
+                internal_code_buffer <= "011011";
                 
             end if;
                 
@@ -286,8 +340,7 @@ begin
     );
 
     instruction_decoded <= instruction_decoded_buffer;
-    immediate_data_1 <= immediate_data_1_buffer;
-    immediate_data_2 <= immediate_data_2_buffer;
+	internal_code <= internal_code_buffer;
     register_reference <= register_reference_buffer;
 
 end;
