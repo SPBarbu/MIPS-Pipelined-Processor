@@ -48,24 +48,35 @@ begin
         variable line_vector : std_logic_vector (31 downto 0);
         variable line_count : integer range 0 to REG_NUM-1;
         variable iterator : integer := 0;
-        signal rs : unsigned(read_register_1);
-        signal rt : unsigned(read_register_2);
-        signal rd : unsigned(write_register);
+
+        
 
     begin
-        file_open(register_content, REGISTERS, read_mode);
-        iterator := 0;
-        while not endfile(REGISTERS) loop
-            readline(REGISTERS, line_value);
-            read(line_value, line_vector);
-            iterator := iterator + 1;
-            if (iterator == to_integer(rs))then
-                read_data_1 <= line_vector(31 downto 0);
-            elsif (iterator == to_integer(rt)) then
-                read_data_2 <= line_vector(31 downto 0);
-            end if;
-            
-        end loop;
+      
+      --file_open(register_content, REGISTERS, read_mode);
+      iterator := 0;
+      
+      --find register for read register 1
+      while (iterator <= to_integer(unsigned(read_register_1))) loop
+        readline(register_content, line_value);
+        read(line_value, line_vector);
+        if (iterator = to_integer(unsigned(read_register_1))) then
+          read_data_1 <= line_vector(31 downto 0);
+        end if;
+        iterator := iterator + 1;
+      end loop;
+      iterator := 0;
+      
+      --find register for read register 2
+      while (iterator <= to_integer(unsigned(read_register_2))) loop
+        readline(register_content, line_value);
+        read(line_value, line_vector);
+        if (iterator = to_integer(unsigned(read_register_2))) then
+          read_data_2 <= line_vector(31 downto 0);
+        end if;
+        iterator := iterator + 1;
+      end loop;
+      
     end process;
 
     --writing back
