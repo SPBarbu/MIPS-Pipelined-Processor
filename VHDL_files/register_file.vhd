@@ -12,6 +12,7 @@ entity register_file is
     port(
         read_register_1 : in std_logic_vector(31 downto 0); --register rs from instruction
         read_register_2 : in std_logic_vector(31 downto 0); --register rt from instruction
+        write_bit : in std_logic; --if 1 there is data to write, if 0 no data to write
         write_register : in std_logic_vector(4 downto 0); --register rd from instruction
         write_data : in std_logic_vector(31 downto 0); --contents to write back to register rd
         --instruction_type : in std_logic; --bit to determine if register or immediate instruction, 0 for r, 1 for I
@@ -65,6 +66,7 @@ begin
         end if;
         iterator := iterator + 1;
       end loop;
+      
       iterator := 0;
       
       --find register for read register 2
@@ -77,11 +79,26 @@ begin
         iterator := iterator + 1;
       end loop;
       
+      wait; --not sure about this, did this to get rid of a compiler warning since no sensitivity list for process
+      
+      if (write_bit = '1') then
+        iterator := 0;
+        
+        while (iterator <= to_integer(unsigned(write_register))) loop
+          if (iterator = to_integer(unsigned(write_register))) then
+            write(line_value, write_data);
+            writeline(register_content, line_value);
+          end if;
+          iterator := iterator + 1;
+        end loop;
+      end if;
+      
     end process;
 
     --writing back
     --need the register from some previous instruction to know where to write as well as the data to write
     --if the process for reading works, iterate until you find the correct line and use write function
+    
 
 
 end arch;

@@ -23,6 +23,8 @@ entity ID_stage is
         immediate_data_2 : out std_logic_vector(31 downto 0);
         --register reference for writeback
         register_reference : out std_logic_vector (4 downto 0)
+        --for keeping track if writing is necessary, 1 if need to write
+        --write_bit : out std_logic
     );
 end ID_stage;
 
@@ -62,6 +64,7 @@ architecture behavior of ID_stage is
     read_register_1 : in std_logic_vector(31 downto 0);
     read_register_2 : in std_logic_vector(31 downto 0);
     write_register : in std_logic_vector(4 downto 0);
+    write_bit : in std_logic;
     write_data : in std_logic_vector(31 downto 0);
     instruction_type : in std_logic;
     --should there be a reset bit to zero out the register.txt
@@ -72,10 +75,11 @@ architecture behavior of ID_stage is
     
     --buffer signals to be written to at the end of the stage for the next stage
     signal instruction_decoded_buffer : std_logic_vector(5 downto 0) := (others => '0'); --TODO initialize to stall
-	signal internal_code_buffer : std_logic_vector(5 downto 0) := (others => '0');
+	  signal internal_code_buffer : std_logic_vector(5 downto 0) := (others => '0');
     signal immediate_data_1_buffer : std_logic_vector(31 downto 0) := (others => '0'); --TODO initialize to stall
     signal immediate_data_2_buffer : std_logic_vector(31 downto 0) := (others => '0'); --TODO initialize to stall
     signal register_reference_buffer : std_logic_vector (4 downto 0) := (others => '0'); --TODO initialize to stall
+    signal write_bit_buffer : std_logic := '0';
 
 begin
     ID_logic_process : process (clock)
@@ -251,9 +255,9 @@ begin
                 elsif instruction_data(31 downto 26) = "011010" then --ori
                     immediate_data_1_buffer(4 downto 0) <= instruction_data(25 downto 21);
                     immediate_data_2_buffer <= "0000000000000000" & instruction_data(15 downto 0);
-					if instruction_data(20 downto 16) /= "00000" then 
-						register_reference_buffer(4 downto 0) <= instruction_data(20 downto 16); 
-					end if;
+					          if instruction_data(20 downto 16) /= "00000" then 
+						          register_reference_buffer(4 downto 0) <= instruction_data(20 downto 16); 
+					          end if;
                     internal_code_buffer <= "001101";
 
                 elsif instruction_data(31 downto 26) = "101010" then  --xori
@@ -313,12 +317,12 @@ begin
             
             elsif (instruction_data(31 downto 26) = "000010") then --j unconditional jump
                 immediate_data_1_buffer (25 downto 0) <= instruction_data(25 downto 0);
-				instruction_decoded_buffer <= "000010";
+				        instruction_decoded_buffer <= "000010";
                 internal_code_buffer <= "011010";
             
             elsif (instruction_data(31 downto 26) = "000011") then --jal
                 immediate_data_1_buffer (25 downto 0) <= instruction_data(25 downto 0);
-				instruction_decoded_buffer <= "000011";
+				        instruction_decoded_buffer <= "000011";
                 internal_code_buffer <= "011011";
                 
             end if;
@@ -332,6 +336,7 @@ begin
     port map(
         read_register_1 => immediate_data_1_buffer,
         read_register_2 => immediate_data_2_buffer,
+        write_bit => write_bit_buffer,
         write_register => register_reference_buffer,
         write_data => immediate_data_wb,
         instruction_type => write_register,
@@ -340,7 +345,7 @@ begin
     );
 
     instruction_decoded <= instruction_decoded_buffer;
-	internal_code <= internal_code_buffer;
+	 internal_code <= internal_code_buffer;
     register_reference <= register_reference_buffer;
 
 end;
