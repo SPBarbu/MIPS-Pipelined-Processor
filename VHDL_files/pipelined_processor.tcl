@@ -1,6 +1,9 @@
 proc AddWaves {} {
     add wave -position end sim:/pipelined_processor/clock
     add wave -position end sim:/pipelined_processor/IF_ID_instruction_data
+    add wave -position end sim:/pipelined_processor/IF_ID_pc_next
+    add wave -position end sim:/pipelined_processor/ID_IF_jump_target
+    add wave -position end sim:/pipelined_processor/ID_IF_valid_jump_target
     add wave -position end sim:/pipelined_processor/ID_EX_instruction
     add wave -position end sim:/pipelined_processor/ID_EX_immediate_data_1
     add wave -position end sim:/pipelined_processor/ID_EX_immediate_data_2

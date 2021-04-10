@@ -6,9 +6,15 @@ entity IF_stage is
     generic (RAM_SIZE : integer := 32768);
     port (
         clock : in std_logic;
+        --jump target as returned for branch or jump 
+        jump_target : in integer range 0 to RAM_SIZE - 1;
+        --specifies if the jump target is valid
+        valid_jump_targer : in std_logic;
         ------------------------------------------------------------------------------
         --raw instruction data to decode
-        instruction_data : out std_logic_vector(31 downto 0)
+        instruction_data : out std_logic_vector(31 downto 0);
+        --program counter of next instruction ie pc+4
+        pc_next : out integer range 0 to RAM_SIZE - 1
     );
 end IF_stage;
 
@@ -22,6 +28,7 @@ architecture behavior of IF_stage is
 
     signal instruction_data_buffer : std_logic_vector(31 downto 0) := (others => '0');--TODO initialize to stall
     signal program_counter : integer range 0 to RAM_SIZE - 1 := 0;
+    signal pc_next_buffer : integer range 0 to RAM_SIZE - 1 := 0;
 begin
     pm_IM : instruction_memory
     port map(
@@ -35,13 +42,20 @@ begin
     IF_logic_process : process (clock)
     begin
         if (rising_edge(clock)) then
-            --TODO select either increment by 4 of jump to specific line number based on instruction from ID or EX
-            program_counter <= program_counter + 4;
+            case valid_jump_targer is
+                when '1' =>
+                    --jump when valid
+                    program_counter <= jump_target;
+                when others =>
+                    --increment normaly otherwise
+                    program_counter <= program_counter + 4;
+            end case;
             -- TODO logic for the IF stage. Write the values for the next stage on the buffer signals
             -- Because signal values are only updated at the end of the process, those values will be available to ID on the next clock cycle only
         end if;
     end process;
 
+    pc_next <= program_counter + 4;
     instruction_data <= instruction_data_buffer;
 
 end;
