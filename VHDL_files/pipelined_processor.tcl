@@ -19,6 +19,7 @@ proc AddWaves {} {
 vlib work
 
 # compile components
+vcom instruction_memory.vhd
 vcom IF_stage.vhd
 vcom ID_stage.vhd
 vcom EX_stage.vhd
