@@ -16,7 +16,7 @@ entity WB_stage is
         --input of meme
         mem_input : in std_logic_vector(31 downto 0);
         --mux control
-        mem_to_reg : in std_logic
+        mem_to_reg : in std_logic;
         ------------------------------------------------------------------------------
         --data to be written back to register
         immediate_data_wb : out std_logic_vector(31 downto 0);
@@ -40,9 +40,9 @@ begin
             -- TODO logic for the WB stage. Write the values for the next stage on the buffer signals.
             -- Because signal values are only updated at the end of the process, those values will be available to ID on the next clock cycle only
             --instead of having a mux component, do the mux functionality here
-            if (mem_to_reg == '0') then
+            if (mem_to_reg = '0') then
                 immediate_data_wb <= alu_input;
-            elsif (mem_to_reg == '1') then
+            elsif (mem_to_reg = '1') then
                 immediate_data_wb <= mem_input;
             else
                 --set output to 32 X

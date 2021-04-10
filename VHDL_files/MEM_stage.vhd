@@ -25,13 +25,13 @@ entity MEM_stage is
         --data to be written back to register
         immediate_data_mem_out : out std_logic_vector(31 downto 0);
         --register reference of current instruction to forward for writeback
-        register_reference_next_stage : out std_logic_vector (4 downto 0)
+        register_reference_next_stage : out std_logic_vector (4 downto 0);
 
         --memory inputs and outputs
         writedata: IN STD_LOGIC_VECTOR (31 DOWNTO 0);
 		address: IN INTEGER RANGE 0 TO ram_size-1;
-		-- memwrite: IN STD_LOGIC;
-		-- memread: IN STD_LOGIC;
+		memwrite: IN STD_LOGIC;
+		memread: IN STD_LOGIC;
 		readdata: OUT STD_LOGIC_VECTOR (31 DOWNTO 0);
 		--for writing back to txt file
 		memwritetotext: IN STD_LOGIC
@@ -50,21 +50,10 @@ architecture behavior of MEM_stage is
 	SIGNAL read_address_reg: INTEGER RANGE 0 to ram_size-1;
 	--for write back to file
 	file text_file : text open write_mode is "memory.txt";
-	variable row : line;
 
 begin
+
     MEM_logic_process : process (clock)
-
-    main_memory : memory
-    port map (
-    clock => clk,
-    writedata => m_writedata,
-    address => m_addr,
-    memwrite => m_write,
-    memread => m_read,
-    readdata => m_readdata
-    ); 
-
     begin
         if (rising_edge(clock)) then
             --propagate unchanged values to next stage
@@ -96,9 +85,10 @@ begin
 	readdata <= ram_block(read_address_reg);
 
 	--process for writing back to text file
-	writetotext_process: PROCESS (memwritetotext)
+    writetotext_process: PROCESS (memwritetotext)
+    variable row : line;
 	begin
-		if (memwritetotext = '1') then
+        if (memwritetotext = '1') then
 			--iterate for every ram block 
 			for I in 0 to 8191 loop
 				--write the contents of the row at I to the line variable
@@ -106,9 +96,8 @@ begin
 				--write the line to the text file
 				writeline(text_file, row);
 			end loop;
-		end if;
-
-
+        end if;
+    end process;
 
     instruction_next_stage <= instruction_next_stage_buffer;
     immediate_data_mem_out <= immediate_data_mem_out_buffer;
