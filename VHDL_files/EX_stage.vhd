@@ -58,6 +58,9 @@ end component;
 
     --left shifted input for adder
     signal shifted_adder_input : std_logic_vector(31 downto 0);
+
+    --buffer for zero of alu   
+    signal ex_alu_zero_buffer : std_logic;
  
     
 
@@ -72,14 +75,14 @@ begin
         alu_input1 => immediate_data_2,
         alu_output => immediate_data_ex_out,
         alu_control => current_instruction,
-        alu_zero => alu_zero_output
+        alu_zero => ex_alu_zero_buffer
     );
 
     adder : add
     port map(
         add_input0 => ex_adder_input0,
         add_input1 => shifted_adder_input,
-        add_output => ex_adder_output_buffer
+        add_output => ex_add_output_buffer
     );
 
 
@@ -95,11 +98,11 @@ begin
             --branch instructions
             if (current_instruction = "000100") or (current_instruction = "000101") then
                 --if branch condition met, branch to pc + branch offset
-                if (alu_zero_output = '1') then
+                if (ex_alu_zero_buffer = '1') then
                     ex_adder_output <= ex_adder_input0;
                 --else continue as usual
                 else
-                    ex_adder_output <= ex_adder_output_buffer;
+                    ex_adder_output <= ex_add_output_buffer;
                 end if;
             end if;
         end if;
@@ -108,5 +111,6 @@ begin
     instruction_next_stage <= instruction_next_stage_buffer;
     immediate_data_ex_out <= immediate_data_ex_out_buffer;
     register_reference_next_stage <= register_reference_next_stage_buffer;
+    alu_zero_output <= ex_alu_zero_buffer;
 
 end;
