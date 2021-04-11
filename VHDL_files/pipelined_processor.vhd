@@ -3,13 +3,17 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity pipelined_processor is
+    generic (RAM_SIZE : integer := 32768);
 end pipelined_processor;
 
 architecture behavior of pipelined_processor is
     component IF_stage is
         port (
             clock : in std_logic;
-            instruction_data : out std_logic_vector(31 downto 0)
+            jump_target : in integer range 0 to RAM_SIZE - 1;
+            valid_jump_targer : in std_logic;
+            instruction_data : out std_logic_vector(31 downto 0);
+            pc_next : out integer range 0 to RAM_SIZE - 1
         );
     end component;
     component ID_stage is
@@ -19,10 +23,13 @@ architecture behavior of pipelined_processor is
             immediate_data_wb : in std_logic_vector(31 downto 0);
             register_reference_wb : in std_logic_vector (4 downto 0);
             write_register : in std_logic;
+            pc_next : in integer range 0 to RAM_SIZE - 1;
             instruction_decoded : out std_logic_vector(5 downto 0);
             immediate_data_1 : out std_logic_vector(31 downto 0);
             immediate_data_2 : out std_logic_vector(31 downto 0);
-            register_reference : out std_logic_vector (4 downto 0)
+            register_reference : out std_logic_vector (4 downto 0);
+            jump_target : out integer range 0 to RAM_SIZE - 1;
+            valid_jump_targer : out std_logic
         );
     end component;
     component EX_stage is
@@ -64,6 +71,9 @@ architecture behavior of pipelined_processor is
     signal clock_period : time := 1 ns;
     --interstage signals
     signal IF_ID_instruction_data : std_logic_vector(31 downto 0);
+    signal IF_ID_pc_next : integer range 0 to RAM_SIZE - 1;
+    signal ID_IF_jump_target : integer range 0 to RAM_SIZE - 1;
+    signal ID_IF_valid_jump_target : std_logic;
     signal ID_EX_instruction : std_logic_vector(5 downto 0);
     signal ID_EX_immediate_data_1 : std_logic_vector(31 downto 0);
     signal ID_EX_immediate_data_2 : std_logic_vector(31 downto 0);
@@ -86,7 +96,10 @@ begin
     pm_if : IF_stage
     port map(
         clock => clock,
-        instruction_data => IF_ID_instruction_data
+        jump_target => ID_IF_jump_target,
+        valid_jump_targer => ID_IF_valid_jump_target,
+        instruction_data => IF_ID_instruction_data,
+        pc_next => IF_ID_pc_next
     );
     pm_id : ID_stage
     port map(
@@ -95,10 +108,13 @@ begin
         immediate_data_wb => WB_ID_immediate_data,
         register_reference_wb => WB_ID_register_reference,
         write_register => WB_ID_write_register,
+        pc_next => IF_ID_pc_next,
         instruction_decoded => ID_EX_instruction,
         immediate_data_1 => ID_EX_immediate_data_1,
         immediate_data_2 => ID_EX_immediate_data_2,
-        register_reference => ID_EX_register_reference
+        register_reference => ID_EX_register_reference,
+        jump_target => ID_IF_jump_target,
+        valid_jump_targer => ID_IF_valid_jump_target
     );
     pm_ex : EX_stage
     port map(
