@@ -7,9 +7,14 @@ entity EX_stage is
         clock : in std_logic;
         --instruction to execute currently
         current_instruction : in std_logic_vector(5 downto 0);
+        --instruction for ALU
+        alu_instruction : in std_logic_vector(5 downto 0);
         --contains data for alu operations, or address for memory
         immediate_data_1 : in std_logic_vector(31 downto 0);
         immediate_data_2 : in std_logic_vector(31 downto 0);
+        -- adder inputs for pc
+        ex_adder_input0 : in std_logic_vector(31 downto 0);
+        ex_adder_input1 : in std_logic_vector(31 downto 0);
         --register reference of current instruction forwarded for writeback
         register_reference_current : in std_logic_vector (4 downto 0);
         ------------------------------------------------------------------------------
@@ -18,15 +23,78 @@ entity EX_stage is
         --address for memory or data to be written back to register
         immediate_data_ex_out : out std_logic_vector(31 downto 0);
         --register reference of current instruction to forward for writeback
-        register_reference_next_stage : out std_logic_vector (4 downto 0)
+        register_reference_next_stage : out std_logic_vector (4 downto 0);
+
+        --ex adder output
+        ex_adder_output: out std_logic_vector(31 downto 0);
+        --output of zero
+        alu_zero_output: out std_logic := '0'
+
     );
 end EX_stage;
 
 architecture behavior of EX_stage is
+--DECLARE COMPONENTS
+component alu is
+port(
+    alu_input0 : in std_logic_vector(31 downto 0);
+    alu_input1 : in std_logic_vector(31 downto 0);
+    alu_output : out std_logic_vector(31 downto 0);
+    alu_control : in std_logic_vector(5 downto 0);
+    alu_zero : out std_logic := '0'
+);
+end component;
+
+component add is
+port(
+    add_input0 : in std_logic_vector(31 downto 0);
+    add_input1 : in std_logic_vector(31 downto 0);
+    add_output : out std_logic_vector(31 downto 0)
+);
+end component;
+
+component if_mux is
+port(
+    mux_input0 : in std_logic_vector(31 downto 0);
+    mux_input1 : in std_logic_vector(31 downto 0);
+    mux_select : in std_logic;
+    mux_output : out std_logic_vector(31 downto 0)
+);
+end component;
+
     signal instruction_next_stage_buffer : std_logic_vector(5 downto 0) := (others => '0');--TODO initialize to stall
     signal immediate_data_ex_out_buffer : std_logic_vector(31 downto 0) := (others => '0');--TODO initialize to stall
     signal register_reference_next_stage_buffer : std_logic_vector (4 downto 0) := (others => '0');--TODO initialize to stall
+
+    --left shifted input for adder
+    signal shifted_adder_input : std_logic_vector(31 downto 0);
+    --Signals for output of components
+    signal ex_mux_output : std_logic_vector(31 downto 0);
+    
+
 begin
+    --shifting by 2 bits
+    shifted_adder_input <= ex_adder_input1(29 downto 0) & "00";
+    --port maps
+
+    arithmetic_logic_unit : alu
+    port map(
+        alu_input0 => immediate_data_1,
+        alu_input1 => immediate_data_2,
+        alu_output => immediate_data_ex_out,
+        alu_control => alu_instruction,
+        alu_zero => alu_zero_output
+    );
+
+    adder : add
+    port map(
+        add_input0 => ex_adder_input0,
+        add_input1 => shifted_adder_input,
+        add_output => ex_adder_output
+    );
+
+
+
     EX_logic_process : process (clock)
     begin
         if (rising_edge(clock)) then
