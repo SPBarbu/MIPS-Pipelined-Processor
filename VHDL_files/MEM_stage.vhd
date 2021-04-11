@@ -30,8 +30,6 @@ entity MEM_stage is
         --memory inputs and outputs
         writedata: IN STD_LOGIC_VECTOR (31 DOWNTO 0);
 		address: IN INTEGER RANGE 0 TO ram_size-1;
-		memwrite: IN STD_LOGIC;
-		memread: IN STD_LOGIC;
 		readdata: OUT STD_LOGIC_VECTOR (31 DOWNTO 0);
 		--for writing back to txt file
 		memwritetotext: IN STD_LOGIC
@@ -76,7 +74,8 @@ begin
 
 		--This is the actual synthesizable SRAM block
 		IF (clock'event AND clock = '1') THEN
-			IF (memwrite = '1') THEN
+            --only SW writes to the memory
+			IF (current_instruction = "101011") THEN
 				ram_block(address) <= writedata;
 			END IF;
 		read_address_reg <= address;

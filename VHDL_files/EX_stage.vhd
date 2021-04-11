@@ -7,8 +7,6 @@ entity EX_stage is
         clock : in std_logic;
         --instruction to execute currently
         current_instruction : in std_logic_vector(5 downto 0);
-        --instruction for ALU
-        alu_instruction : in std_logic_vector(5 downto 0);
         --contains data for alu operations, or address for memory
         immediate_data_1 : in std_logic_vector(31 downto 0);
         immediate_data_2 : in std_logic_vector(31 downto 0);
@@ -53,23 +51,14 @@ port(
 );
 end component;
 
-component if_mux is
-port(
-    mux_input0 : in std_logic_vector(31 downto 0);
-    mux_input1 : in std_logic_vector(31 downto 0);
-    mux_select : in std_logic;
-    mux_output : out std_logic_vector(31 downto 0)
-);
-end component;
-
     signal instruction_next_stage_buffer : std_logic_vector(5 downto 0) := (others => '0');--TODO initialize to stall
     signal immediate_data_ex_out_buffer : std_logic_vector(31 downto 0) := (others => '0');--TODO initialize to stall
     signal register_reference_next_stage_buffer : std_logic_vector (4 downto 0) := (others => '0');--TODO initialize to stall
+    signal ex_add_output_buffer : std_logic_vector(31 downto 0);
 
     --left shifted input for adder
     signal shifted_adder_input : std_logic_vector(31 downto 0);
-    --Signals for output of components
-    signal ex_mux_output : std_logic_vector(31 downto 0);
+ 
     
 
 begin
@@ -82,7 +71,7 @@ begin
         alu_input0 => immediate_data_1,
         alu_input1 => immediate_data_2,
         alu_output => immediate_data_ex_out,
-        alu_control => alu_instruction,
+        alu_control => current_instruction,
         alu_zero => alu_zero_output
     );
 
@@ -90,7 +79,7 @@ begin
     port map(
         add_input0 => ex_adder_input0,
         add_input1 => shifted_adder_input,
-        add_output => ex_adder_output
+        add_output => ex_adder_output_buffer
     );
 
 
@@ -103,6 +92,16 @@ begin
             register_reference_next_stage_buffer <= register_reference_current;
             -- TODO logic for the EX stage. Write the values for the next stage on the buffer signals.
             -- Because signal values are only updated at the end of the process, those values will be available to MEM on the next clock cycle only
+            --branch instructions
+            if (current_instruction = "000100") or (current_instruction = "000101") then
+                --if branch condition met, branch to pc + branch offset
+                if (alu_zero_output = '1') then
+                    ex_adder_output <= ex_adder_input0;
+                --else continue as usual
+                else
+                    ex_adder_output <= ex_adder_output_buffer;
+                end if;
+            end if;
         end if;
     end process;
 

@@ -15,8 +15,6 @@ entity WB_stage is
         alu_input : in std_logic_vector(31 downto 0);
         --input of meme
         mem_input : in std_logic_vector(31 downto 0);
-        --mux control
-        mem_to_reg : in std_logic;
         ------------------------------------------------------------------------------
         --data to be written back to register
         immediate_data_wb : out std_logic_vector(31 downto 0);
@@ -46,12 +44,12 @@ begin
                 immediate_data_wb <= mem_input;
             else
                 --set output to 32 X
-                immediate_data_wb <= "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+                immediate_data_wb_buffer <= "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
             end if;
         end if;
     end process;
 
-    -- immediate_data_wb <= immediate_data_wb_buffer;
+    immediate_data_wb <= immediate_data_wb_buffer;
     register_reference_wb <= register_reference_wb_buffer;
     write_register <= write_register_buffer;
 
