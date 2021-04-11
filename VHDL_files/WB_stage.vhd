@@ -37,11 +37,17 @@ begin
             -- immediate_data_wb_buffer <= immediate_data_mem_in;
             -- TODO logic for the WB stage. Write the values for the next stage on the buffer signals.
             -- Because signal values are only updated at the end of the process, those values will be available to ID on the next clock cycle only
-            --instead of having a mux component, do the mux functionality here
-            if (mem_to_reg = '0') then
-                immediate_data_wb <= alu_input;
-            elsif (mem_to_reg = '1') then
-                immediate_data_wb <= mem_input;
+            --instead of having a mux component, do the mux functionality here depending on the current opcode
+            --functions that do not write from mem to register, branch and jumps not included
+            if (current_instruction = "100000") or (current_instruction = "100010") or (current_instruction = "001000") or (current_instruction = "011000") or (current_instruction = "011010") or (current_instruction = "101010") or 
+            (current_instruction = "001010") or (current_instruction = "100100") or (current_instruction = "100101") or (current_instruction = "100111") or (current_instruction = "101000") or (current_instruction = "001100") or 
+            (current_instruction = "001101") or (current_instruction = "001110") or (current_instruction = "010000") or (current_instruction = "010010") or (current_instruction = "001111") or (current_instruction = "000000") or
+            (current_instruction = "000010") or (current_instruction = "000011")
+            then
+                immediate_data_wb_buffer <= alu_input;
+            --lw and sw write from mem to register
+            elsif (current_instruction = "100011") or (current_instruction = "101011") then
+                immediate_data_wb_buffer <= mem_input;
             else
                 --set output to 32 X
                 immediate_data_wb_buffer <= "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
