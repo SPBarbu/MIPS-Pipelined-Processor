@@ -9,7 +9,6 @@ entity alu is
         alu_input1 : in std_logic_vector(31 downto 0);
         alu_output : out std_logic_vector(31 downto 0);
         alu_control : in std_logic_vector(5 downto 0);
-        alu_zero : out std_logic := '0'
     );
     end alu;
     
@@ -144,24 +143,24 @@ entity alu is
             when "101011" =>
                 alu_output <= std_logic_vector(unsigned(alu_input0) + unsigned(alu_input1));
                 
-            --CONTROL_FLOW
-            --beq
-            when "000100" =>
-                --input1 stores offset
-                alu_output <= std_logic_vector(to_unsigned(to_integer(unsigned(alu_input0)) + to_integer(unsigned(alu_input1)) * 4, 32));
-                if (alu_input0 = alu_input1) then
-                    alu_zero <= '1';
-                else
-                    alu_zero <= '0';
-                end if;
-            --bne
-            when "000101" =>
-                alu_output <= std_logic_vector(to_unsigned(to_integer(unsigned(alu_input0)) + to_integer(unsigned(alu_input1)) * 4, 32));
-                if (alu_input0 = alu_input1) then
-                    alu_zero <= '0';
-                else
-                    alu_zero <= '1';
-                end if;
+            --CONTROL_FLOW HANDLED IN ID STAGE
+            -- --beq
+            -- when "000100" =>
+            --     --input1 stores offset
+            --     alu_output <= std_logic_vector(to_unsigned(to_integer(unsigned(alu_input0)) + to_integer(unsigned(alu_input1)) * 4, 32));
+            --     if (alu_input0 = alu_input1) then
+            --         alu_zero <= '1';
+            --     else
+            --         alu_zero <= '0';
+            --     end if;
+            -- --bne
+            -- when "000101" =>
+            --     alu_output <= std_logic_vector(to_unsigned(to_integer(unsigned(alu_input0)) + to_integer(unsigned(alu_input1)) * 4, 32));
+            --     if (alu_input0 = alu_input1) then
+            --         alu_zero <= '0';
+            --     else
+            --         alu_zero <= '1';
+            --     end if;
             -- --j
             -- when "000010" =>
             --     --input0 contains pc address, input1 contains target, take 4 MSB from pc and 26 LSB from target and concatenate 00   
@@ -181,7 +180,7 @@ entity alu is
             --     alu_zero <= '1';
                 
             when others =>
-                alu_zero <= '0';
+                null;
 
         end case;
     end process;

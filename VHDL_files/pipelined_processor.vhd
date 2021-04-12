@@ -87,6 +87,7 @@ architecture behavior of pipelined_processor is
     signal WB_ID_immediate_data : std_logic_vector(31 downto 0);
     signal WB_ID_register_reference : std_logic_vector (4 downto 0);
     signal WB_ID_write_register : std_logic;
+    signal ground := '0';
     --BTW:to monitor a signal from a component:
     -->expose it as an output of the component
     -->add a reference signal here
@@ -114,7 +115,8 @@ begin
         immediate_data_2 => ID_EX_immediate_data_2,
         register_reference => ID_EX_register_reference,
         jump_target => ID_IF_jump_target,
-        valid_jump_targer => ID_IF_valid_jump_target
+        valid_jump_targer => ID_IF_valid_jump_target,
+        regwritetotext => ground
     );
     pm_ex : EX_stage
     port map(
@@ -136,7 +138,8 @@ begin
         register_reference_current => EX_MEM_register_reference,
         instruction_next_stage => MEM_WB_instruction,
         immediate_data_mem_out => MEM_WB_immediate_data,
-        register_reference_next_stage => MEM_WB_register_reference
+        register_reference_next_stage => MEM_WB_register_reference,
+        memwritetotext => ground
     );
     pm_wb : WB_stage
     port map(

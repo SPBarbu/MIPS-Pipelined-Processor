@@ -10,9 +10,6 @@ entity EX_stage is
         --contains data for alu operations, or address for memory
         immediate_data_1 : in std_logic_vector(31 downto 0);
         immediate_data_2 : in std_logic_vector(31 downto 0);
-        -- adder inputs for pc
-        ex_adder_input0 : in std_logic_vector(31 downto 0);
-        ex_adder_input1 : in std_logic_vector(31 downto 0);
         --register reference of current instruction forwarded for writeback
         register_reference_current : in std_logic_vector (4 downto 0);
         ------------------------------------------------------------------------------
@@ -22,12 +19,6 @@ entity EX_stage is
         immediate_data_ex_out : out std_logic_vector(31 downto 0);
         --register reference of current instruction to forward for writeback
         register_reference_next_stage : out std_logic_vector (4 downto 0);
-
-        --ex adder output
-        ex_adder_output: out std_logic_vector(31 downto 0);
-        --output of zero
-        alu_zero_output: out std_logic := '0'
-
     );
 end EX_stage;
 
@@ -39,15 +30,6 @@ port(
     alu_input1 : in std_logic_vector(31 downto 0);
     alu_output : out std_logic_vector(31 downto 0);
     alu_control : in std_logic_vector(5 downto 0);
-    alu_zero : out std_logic := '0'
-);
-end component;
-
-component add is
-port(
-    add_input0 : in std_logic_vector(31 downto 0);
-    add_input1 : in std_logic_vector(31 downto 0);
-    add_output : out std_logic_vector(31 downto 0)
 );
 end component;
 
@@ -56,8 +38,6 @@ end component;
     signal register_reference_next_stage_buffer : std_logic_vector (4 downto 0) := (others => '0');--TODO initialize to stall
     signal ex_add_output_buffer : std_logic_vector(31 downto 0);
 
-    --left shifted input for adder
-    signal shifted_adder_input : std_logic_vector(31 downto 0);
 
     --buffer for zero of alu   
     signal ex_alu_zero_buffer : std_logic;
@@ -78,15 +58,6 @@ begin
         alu_zero => ex_alu_zero_buffer
     );
 
-    adder : add
-    port map(
-        add_input0 => ex_adder_input0,
-        add_input1 => shifted_adder_input,
-        add_output => ex_add_output_buffer
-    );
-
-
-
     EX_logic_process : process (clock)
     begin
         if (rising_edge(clock)) then
@@ -95,22 +66,11 @@ begin
             register_reference_next_stage_buffer <= register_reference_current;
             -- TODO logic for the EX stage. Write the values for the next stage on the buffer signals.
             -- Because signal values are only updated at the end of the process, those values will be available to MEM on the next clock cycle only
-            --branch instructions
-            if (current_instruction = "000100") or (current_instruction = "000101") then
-                --if branch condition met, branch to pc + branch offset
-                if (ex_alu_zero_buffer = '1') then
-                    ex_adder_output <= ex_adder_input0;
-                --else continue as usual
-                else
-                    ex_adder_output <= ex_add_output_buffer;
-                end if;
-            end if;
         end if;
     end process;
 
     instruction_next_stage <= instruction_next_stage_buffer;
     immediate_data_ex_out <= immediate_data_ex_out_buffer;
     register_reference_next_stage <= register_reference_next_stage_buffer;
-    alu_zero_output <= ex_alu_zero_buffer;
 
 end;
