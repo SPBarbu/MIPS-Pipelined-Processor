@@ -29,7 +29,8 @@ architecture behavior of pipelined_processor is
             immediate_data_2 : out std_logic_vector(31 downto 0);
             register_reference : out std_logic_vector (4 downto 0);
             jump_target : out integer range 0 to RAM_SIZE - 1;
-            valid_jump_targer : out std_logic
+            valid_jump_targer : out std_logic;
+            regwritetotext : in std_logic
         );
     end component;
     component EX_stage is
@@ -52,7 +53,8 @@ architecture behavior of pipelined_processor is
             register_reference_current : in std_logic_vector (4 downto 0);
             instruction_next_stage : out std_logic_vector(5 downto 0);
             immediate_data_mem_out : out std_logic_vector(31 downto 0);
-            register_reference_next_stage : out std_logic_vector (4 downto 0)
+            register_reference_next_stage : out std_logic_vector (4 downto 0);
+            memwritetotext : in std_logic
         );
     end component;
     component WB_stage is
@@ -87,7 +89,7 @@ architecture behavior of pipelined_processor is
     signal WB_ID_immediate_data : std_logic_vector(31 downto 0);
     signal WB_ID_register_reference : std_logic_vector (4 downto 0);
     signal WB_ID_write_register : std_logic;
-    signal ground := '0';
+    signal ground : std_logic := '0';
     --BTW:to monitor a signal from a component:
     -->expose it as an output of the component
     -->add a reference signal here

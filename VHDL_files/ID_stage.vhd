@@ -1,6 +1,8 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+USE STD.textio.all;
+USE ieee.std_logic_textio.all;
 
 entity ID_stage is
     generic(
@@ -34,8 +36,6 @@ entity ID_stage is
 
         --for writing back to file for registers
         regwritetotext : in std_logic
-        --for pc of next instruction to ex stage
-        pc_next_ex : out integer range 0 to RAM_SIZE -1;
     );
 end ID_stage;
 
@@ -217,87 +217,87 @@ begin
 				instruction_decoded_buffer <= instruction_data(31 downto 26);
 
 
-                if instruction_data(31 downto 26) = "001000" then --addi instruction
+                if (instruction_data(31 downto 26) = "001000") then --addi instruction
                     immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                    if instruction_data(15) = "0" then --if msb is 0, sign extend 0
+                    if (instruction_data(15 downto 15) = "0") then --if msb is 0, sign extend 0
                         immediate_data_2_buffer <= "0000000000000000" & instruction_data(15 downto 0);
-                    elsif instruction_data(15) = "1" then --if msb is 1, sign extend 1
+                    elsif (instruction_data(15 downto 15) = "1") then --if msb is 1, sign extend 1
                         immediate_data_2_buffer <= "1111111111111111" & instruction_data(15 downto 0);
                     end if;
-					if instruction_data(20 downto 16) /= "00000" then 
+					if (instruction_data(20 downto 16) /= "00000") then 
 						register_reference_buffer <= instruction_data(20 downto 16); 
 					end if;
 
-                elsif instruction_data(31 downto 26) = "001010" then  --slti
+                elsif (instruction_data(31 downto 26) = "001010") then  --slti
                     immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                    if instruction_data(15) = "0" then 
+                    if (instruction_data(15 downto 15) = "0") then 
                         immediate_data_2_buffer <= "0000000000000000" & instruction_data(15 downto 0);
-                    elsif instruction_data(15) = "1" then 
+                    elsif (instruction_data(15 downto 15) = "1") then 
                         immediate_data_2_buffer <= "1111111111111111" & instruction_data(15 downto 0);
                     end if;
-					if instruction_data(20 downto 16) /= "00000" then 
+					if (instruction_data(20 downto 16) /= "00000") then 
 						register_reference_buffer <= instruction_data(20 downto 16); 
 					end if;
 
-                elsif instruction_data(31 downto 26) = "001100" then --andi
+                elsif (instruction_data(31 downto 26) = "001100") then --andi
                     immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
                     immediate_data_2_buffer <= "0000000000000000" & instruction_data(15 downto 0);
-					if instruction_data(20 downto 16) /= "00000" then 
+					if (instruction_data(20 downto 16) /= "00000") then 
 						register_reference_buffer(4 downto 0) <= instruction_data(20 downto 16); 
 					end if;
 
-                elsif instruction_data(31 downto 26) = "011010" then --ori
+                elsif (instruction_data(31 downto 26) = "011010") then --ori
                     immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
                     immediate_data_2_buffer <= "0000000000000000" & instruction_data(15 downto 0);
-                    if instruction_data(20 downto 16) /= "00000" then 
+                    if (instruction_data(20 downto 16) /= "00000") then 
                         register_reference_buffer(4 downto 0) <= instruction_data(20 downto 16); 
                     end if;
 
-                elsif instruction_data(31 downto 26) = "101010" then  --xori
+                elsif (instruction_data(31 downto 26) = "101010") then  --xori
                     immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
                     immediate_data_2_buffer <= "0000000000000000" & instruction_data(15 downto 0);
-					if instruction_data(20 downto 16) /= "00000" then 
+					if (instruction_data(20 downto 16) /= "00000") then 
 						register_reference_buffer(4 downto 0) <= instruction_data(20 downto 16); 
 					end if;
 
-                elsif instruction_data(31 downto 26) = "001111" then  --lui
+                elsif (instruction_data(31 downto 26) = "001111") then  --lui
                     immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-					if instruction_data(20 downto 16) /= "00000" then 
+					if (instruction_data(20 downto 16) /= "00000") then 
 						register_reference_buffer(4 downto 0) <= instruction_data(20 downto 16); 
 					end if;
 
-                elsif instruction_data(31 downto 26) = "100011" then  --lw
+                elsif (instruction_data(31 downto 26) = "100011") then  --lw
                     immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                    if instruction_data(15) = "0" then 
+                    if (instruction_data(15 downto 15) = "0") then 
                         immediate_data_2_buffer <= "0000000000000000" & instruction_data(15 downto 0);
-                    elsif instruction_data(15) = "1" then
+                    elsif (instruction_data(15 downto 15) = "1") then
                         immediate_data_2_buffer <= "1111111111111111" & instruction_data(15 downto 0);
                     end if;
 
-                elsif instruction_data(31 downto 26) = "101011" then  --sw
+                elsif (instruction_data(31 downto 26) = "101011") then  --sw
                     immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                    if instruction_data(15) = "0" then 
+                    if (instruction_data(15 downto 15) = "0") then 
                         immediate_data_2_buffer <= "0000000000000000" & instruction_data(15 downto 0);
-                    elsif instruction_data(15) = "1" then 
+                    elsif (instruction_data(15 downto 15) = "1") then 
                         immediate_data_2_buffer <= "1111111111111111" & instruction_data(15 downto 0);
                     end if;
 
 				--need to make a comparison between contents of rs and rt, if equal offset by immediate value
 				--make the comparison here? and then send 1 to take the offset if rs = rt and 0 to not?
 				--similar idea for bne but for rs =/= rt
-                elsif instruction_data(31 downto 26) = "000100" then  --beq
+                elsif (instruction_data(31 downto 26) = "000100") then  --beq
                     immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                    if instruction_data(15) = "0" then 
+                    if (instruction_data(15 downto 15) = "0") then 
                         immediate_data_2_buffer <= "00000000000000" & instruction_data(15 downto 0) & "00";
-                    elsif instruction_data(15) = "1" then 
+                    elsif (instruction_data(15 downto 15) = "1") then 
                         immediate_data_2_buffer <= "11111111111111" & instruction_data(15 downto 0) & "00";
                     end if;
 
-                elsif instruction_data(31 downto 26) = "000101" then  --bne
+                elsif (instruction_data(31 downto 26) = "000101") then  --bne
                     immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                    if instruction_data(15) = "0" then 
+                    if (instruction_data(15 downto 15) = "0") then 
                         immediate_data_2_buffer <= "00000000000000" & instruction_data(15 downto 0) & "00";
-                    elsif instruction_data(15) = "1" then 
+                    elsif (instruction_data(15 downto 15) = "1") then 
                         immediate_data_2_buffer <= "11111111111111" & instruction_data(15 downto 0) & "00";
                     end if;
                 end if;
@@ -331,10 +331,8 @@ begin
  
 
     instruction_decoded <= instruction_decoded_buffer;
-	internal_code <= internal_code_buffer;
     register_reference <= register_reference_buffer;
     immediate_data_1 <= immediate_data_1_buffer;
     immediate_data_2 <= immediate_data_2_buffer;
-    pc_next_ex <= pc_next;
 
 end;

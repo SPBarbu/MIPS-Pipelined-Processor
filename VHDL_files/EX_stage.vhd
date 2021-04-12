@@ -18,7 +18,7 @@ entity EX_stage is
         --address for memory or data to be written back to register
         immediate_data_ex_out : out std_logic_vector(31 downto 0);
         --register reference of current instruction to forward for writeback
-        register_reference_next_stage : out std_logic_vector (4 downto 0);
+        register_reference_next_stage : out std_logic_vector (4 downto 0)
     );
 end EX_stage;
 
@@ -29,7 +29,7 @@ port(
     alu_input0 : in std_logic_vector(31 downto 0);
     alu_input1 : in std_logic_vector(31 downto 0);
     alu_output : out std_logic_vector(31 downto 0);
-    alu_control : in std_logic_vector(5 downto 0);
+    alu_control : in std_logic_vector(5 downto 0)
 );
 end component;
 
@@ -45,8 +45,6 @@ end component;
     
 
 begin
-    --shifting by 2 bits
-    shifted_adder_input <= ex_adder_input1(29 downto 0) & "00";
     --port maps
 
     arithmetic_logic_unit : alu
@@ -54,8 +52,7 @@ begin
         alu_input0 => immediate_data_1,
         alu_input1 => immediate_data_2,
         alu_output => immediate_data_ex_out,
-        alu_control => current_instruction,
-        alu_zero => ex_alu_zero_buffer
+        alu_control => current_instruction
     );
 
     EX_logic_process : process (clock)

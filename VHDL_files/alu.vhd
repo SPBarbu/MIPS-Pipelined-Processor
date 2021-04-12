@@ -8,7 +8,7 @@ entity alu is
         alu_input0 : in std_logic_vector(31 downto 0);
         alu_input1 : in std_logic_vector(31 downto 0);
         alu_output : out std_logic_vector(31 downto 0);
-        alu_control : in std_logic_vector(5 downto 0);
+        alu_control : in std_logic_vector(5 downto 0)
     );
     end alu;
     
