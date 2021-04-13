@@ -26,11 +26,6 @@ entity MEM_stage is
         immediate_data_mem_out : out std_logic_vector(31 downto 0);
         --register reference of current instruction to forward for writeback
         register_reference_next_stage : out std_logic_vector (4 downto 0);
-
-        --memory inputs and outputs
-        writedata: IN STD_LOGIC_VECTOR (31 DOWNTO 0);
-		address: IN INTEGER RANGE 0 TO ram_size-1;
-		readdata: OUT STD_LOGIC_VECTOR (31 DOWNTO 0);
 		--for writing back to txt file
 		memwritetotext: IN STD_LOGIC
     );
@@ -45,22 +40,34 @@ architecture behavior of MEM_stage is
     --signals for memory
     TYPE MEM IS ARRAY(ram_size-1 downto 0) OF STD_LOGIC_VECTOR(31 DOWNTO 0);
 	SIGNAL ram_block: MEM;
-	SIGNAL read_address_reg: INTEGER RANGE 0 to ram_size-1;
 	--for write back to file
 	file text_file : text open write_mode is "memory.txt";
 
 begin
 
-    MEM_logic_process : process (clock)
-    begin
-        if (rising_edge(clock)) then
-            --propagate unchanged values to next stage
-            instruction_next_stage_buffer <= current_instruction;
-            register_reference_next_stage_buffer <= register_reference_current;
-            -- TODO logic for the MEM stage. Write the values for the next stage on the buffer signals.
-            -- Because signal values are only updated at the end of the process, those values will be available to WB on the next clock cycle only
-        end if;
-    end process;
+    -- MEM_logic_process : process (clock)
+    -- begin
+    --     if (rising_edge(clock)) then
+    --         --propagate unchanged values to next stage
+    --         instruction_next_stage_buffer <= current_instruction;
+    --         register_reference_next_stage_buffer <= register_reference_current;
+    --         -- TODO logic for the MEM stage. Write the values for the next stage on the buffer signals.
+    --         -- Because signal values are only updated at the end of the process, those values will be available to WB on the next clock cycle only
+    --         if (current_instruction = "100000") or (current_instruction = "100010") or (current_instruction = "001000") or (current_instruction = "011000") or (current_instruction = "011010") or (current_instruction = "101010") or 
+    --         (current_instruction = "001010") or (current_instruction = "100100") or (current_instruction = "100101") or (current_instruction = "100111") or (current_instruction = "101000") or (current_instruction = "001100") or 
+    --         (current_instruction = "001101") or (current_instruction = "001110") or (current_instruction = "010000") or (current_instruction = "010010") or (current_instruction = "001111") or (current_instruction = "000000") or
+    --         (current_instruction = "000010") or (current_instruction = "000011")
+    --         then
+    --             immediate_data_mem_out_buffer <= immediate_data_mem_in;
+    --         --lw and sw write from mem to register
+    --         elsif (current_instruction = "100011") or (current_instruction = "101011") then
+    --             immediate_data_mem_out_buffer <= mem_input;
+    --         else
+    --             --set output to 32 X
+    --             immediate_data_wb_buffer <= "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+    --         end if;
+    --     end if;
+    -- end process;
 
     --This is the main section of the SRAM model
 	mem_process: PROCESS (clock)
@@ -74,14 +81,28 @@ begin
 
 		--This is the actual synthesizable SRAM block
 		IF (clock'event AND clock = '1') THEN
-            --only SW writes to the memory
-			IF (current_instruction = "101011") THEN
-				ram_block(address) <= writedata;
-			END IF;
-		read_address_reg <= address;
+            --propagate unchanged values to next stage
+            instruction_next_stage_buffer <= current_instruction;
+            register_reference_next_stage_buffer <= register_reference_current;
+            --not mem operation, just pass alu output
+            if (current_instruction = "100000") or (current_instruction = "100010") or (current_instruction = "001000") or (current_instruction = "011000") or (current_instruction = "011010") or (current_instruction = "101010") or 
+            (current_instruction = "001010") or (current_instruction = "100100") or (current_instruction = "100101") or (current_instruction = "100111") or (current_instruction = "101000") or (current_instruction = "001100") or 
+            (current_instruction = "001101") or (current_instruction = "001110") or (current_instruction = "010000") or (current_instruction = "010010") or (current_instruction = "001111") or (current_instruction = "000000") or
+            (current_instruction = "000010") or (current_instruction = "000011")
+            then
+                immediate_data_mem_out_buffer <= immediate_data_mem_in;
+            --sw 
+            elsif (current_instruction = "100011") then
+                ram_block(to_integer(unsigned(immediate_data_mem_in))) <= writedata;
+            --lw
+            elsif (current_instruction = "101011") then
+                immediate_data_mem_out_buffer <= ram_block(to_integer(unsigned(immediate_data_mem_in)))
+            else
+                --set output to 32 X
+                immediate_data_wb_buffer <= "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+            end if;
 		END IF;
 	END PROCESS;
-	readdata <= ram_block(read_address_reg);
 
 	--process for writing back to text file
     writetotext_process: PROCESS (memwritetotext)
