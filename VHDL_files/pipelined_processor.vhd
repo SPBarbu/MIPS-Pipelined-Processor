@@ -27,6 +27,7 @@ architecture behavior of pipelined_processor is
             instruction_decoded : out std_logic_vector(5 downto 0);
             immediate_data_1 : out std_logic_vector(31 downto 0);
             immediate_data_2 : out std_logic_vector(31 downto 0);
+            immediate_data_3 : out std_logic_vector(31 downto 0);
             register_reference : out std_logic_vector (4 downto 0);
             jump_target : out integer range 0 to RAM_SIZE - 1;
             valid_jump_targer : out std_logic;
@@ -39,9 +40,11 @@ architecture behavior of pipelined_processor is
             current_instruction : in std_logic_vector(5 downto 0);
             immediate_data_1 : in std_logic_vector(31 downto 0);
             immediate_data_2 : in std_logic_vector(31 downto 0);
+            immediate_data_3 : in std_logic_vector(31 downto 0);
             register_reference_current : in std_logic_vector (4 downto 0);
             instruction_next_stage : out std_logic_vector(5 downto 0);
             immediate_data_ex_out : out std_logic_vector(31 downto 0);
+            immediate_data_ex_out_2 : out std_logic_vector(31 downto 0);
             register_reference_next_stage : out std_logic_vector (4 downto 0)
         );
     end component;
@@ -50,6 +53,7 @@ architecture behavior of pipelined_processor is
             clock : in std_logic;
             current_instruction : in std_logic_vector(5 downto 0);
             immediate_data_mem_in : in std_logic_vector(31 downto 0);
+            immediate_data_mem_in_2 : in std_logic_vector(31 downto 0);
             register_reference_current : in std_logic_vector (4 downto 0);
             instruction_next_stage : out std_logic_vector(5 downto 0);
             immediate_data_mem_out : out std_logic_vector(31 downto 0);
@@ -79,9 +83,11 @@ architecture behavior of pipelined_processor is
     signal ID_EX_instruction : std_logic_vector(5 downto 0);
     signal ID_EX_immediate_data_1 : std_logic_vector(31 downto 0);
     signal ID_EX_immediate_data_2 : std_logic_vector(31 downto 0);
+    signal ID_EX_immediate_data_3 : std_logic_vector(31 downto 0);
     signal ID_EX_register_reference : std_logic_vector (4 downto 0);
     signal EX_MEM_instruction : std_logic_vector(5 downto 0);
     signal EX_MEM_immediate_data : std_logic_vector(31 downto 0);
+    signal EX_MEM_immediate_data_2 : std_logic_vector(31 downto 0);
     signal EX_MEM_register_reference : std_logic_vector (4 downto 0);
     signal MEM_WB_instruction : std_logic_vector(5 downto 0);
     signal MEM_WB_immediate_data : std_logic_vector(31 downto 0);
@@ -115,6 +121,7 @@ begin
         instruction_decoded => ID_EX_instruction,
         immediate_data_1 => ID_EX_immediate_data_1,
         immediate_data_2 => ID_EX_immediate_data_2,
+        immediate_data_3 => ID_EX_immediate_data_3,
         register_reference => ID_EX_register_reference,
         jump_target => ID_IF_jump_target,
         valid_jump_targer => ID_IF_valid_jump_target,
@@ -126,9 +133,11 @@ begin
         current_instruction => ID_EX_instruction,
         immediate_data_1 => ID_EX_immediate_data_1,
         immediate_data_2 => ID_EX_immediate_data_2,
+        immediate_data_3 => ID_EX_immediate_data_3,
         register_reference_current => ID_EX_register_reference,
         instruction_next_stage => EX_MEM_instruction,
         immediate_data_ex_out => EX_MEM_immediate_data,
+        immediate_data_ex_out_2 => EX_MEM_immediate_data_2,
         register_reference_next_stage => EX_MEM_register_reference
 
     );
@@ -137,6 +146,7 @@ begin
         clock => clock,
         current_instruction => EX_MEM_instruction,
         immediate_data_mem_in => EX_MEM_immediate_data,
+        immediate_data_mem_in_2 => EX_MEM_immediate_data_2,
         register_reference_current => EX_MEM_register_reference,
         instruction_next_stage => MEM_WB_instruction,
         immediate_data_mem_out => MEM_WB_immediate_data,

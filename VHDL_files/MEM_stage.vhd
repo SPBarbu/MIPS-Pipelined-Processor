@@ -17,6 +17,8 @@ entity MEM_stage is
         current_instruction : in std_logic_vector(5 downto 0);
         --address for memory or data to be written back to register
         immediate_data_mem_in : in std_logic_vector(31 downto 0);
+        --for store value
+        immediate_data_mem_in_2 : in std_logic_vector(31 downto 0);
         --register reference of current instruction forwarded for writeback
         register_reference_current : in std_logic_vector (4 downto 0);
         ------------------------------------------------------------------------------
@@ -93,13 +95,13 @@ begin
                 immediate_data_mem_out_buffer <= immediate_data_mem_in;
             --sw 
             elsif (current_instruction = "100011") then
-                ram_block(to_integer(unsigned(immediate_data_mem_in))) <= writedata;
+                ram_block(to_integer(unsigned(immediate_data_mem_in))) <= immediate_data_mem_in_2;
             --lw
             elsif (current_instruction = "101011") then
-                immediate_data_mem_out_buffer <= ram_block(to_integer(unsigned(immediate_data_mem_in)))
+                immediate_data_mem_out_buffer <= ram_block(to_integer(unsigned(immediate_data_mem_in)));
             else
                 --set output to 32 X
-                immediate_data_wb_buffer <= "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+                immediate_data_mem_out_buffer <= "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
             end if;
 		END IF;
 	END PROCESS;

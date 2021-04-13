@@ -27,6 +27,8 @@ entity ID_stage is
         --data for alu operations, or address for memory
         immediate_data_1 : out std_logic_vector(31 downto 0);
         immediate_data_2 : out std_logic_vector(31 downto 0);
+        --data for store in memory
+        immediate_data_3 : out std_logic_vector(31 downto 0);
         --register reference for writeback
         register_reference : out std_logic_vector (4 downto 0);
         --jump target for branch or jump 
@@ -76,6 +78,7 @@ architecture behavior of ID_stage is
 	  signal internal_code_buffer : std_logic_vector(5 downto 0) := (others => '0');
     signal immediate_data_1_buffer : std_logic_vector(31 downto 0) := (others => '0'); --TODO initialize to stall
     signal immediate_data_2_buffer : std_logic_vector(31 downto 0) := (others => '0'); --TODO initialize to stall
+    signal immediate_data_3_buffer : std_logic_vector(31 downto 0) := (others => '0');
     signal register_reference_buffer : std_logic_vector (4 downto 0) := (others => '0'); --TODO initialize to stall
     signal jump_target_buffer : integer range 0 to RAM_SIZE - 1 := 0;
     signal valid_jump_targer_buffer : std_logic := '0';
@@ -273,6 +276,8 @@ begin
                     elsif (instruction_data(15 downto 15) = "1") then
                         immediate_data_2_buffer <= "1111111111111111" & instruction_data(15 downto 0);
                     end if;
+                    --pass register reference
+                    register_reference_buffer(4 downto 0) <= instruction_data(20 downto 16);
 
                 elsif (instruction_data(31 downto 26) = "101011") then  --sw
                     immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
@@ -281,6 +286,8 @@ begin
                     elsif (instruction_data(15 downto 15) = "1") then 
                         immediate_data_2_buffer <= "1111111111111111" & instruction_data(15 downto 0);
                     end if;
+                    --content of rt
+                    immediate_data_3_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
 
 				--need to make a comparison between contents of rs and rt, if equal offset by immediate value
 				--make the comparison here? and then send 1 to take the offset if rs = rt and 0 to not?
@@ -334,5 +341,6 @@ begin
     register_reference <= register_reference_buffer;
     immediate_data_1 <= immediate_data_1_buffer;
     immediate_data_2 <= immediate_data_2_buffer;
+    immediate_data_3 <= immediate_data_3_buffer;
 
 end;

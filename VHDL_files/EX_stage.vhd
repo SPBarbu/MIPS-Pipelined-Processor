@@ -10,6 +10,7 @@ entity EX_stage is
         --contains data for alu operations, or address for memory
         immediate_data_1 : in std_logic_vector(31 downto 0);
         immediate_data_2 : in std_logic_vector(31 downto 0);
+        immediate_data_3 : in std_logic_vector(31 downto 0);
         --register reference of current instruction forwarded for writeback
         register_reference_current : in std_logic_vector (4 downto 0);
         ------------------------------------------------------------------------------
@@ -17,6 +18,7 @@ entity EX_stage is
         instruction_next_stage : out std_logic_vector(5 downto 0);
         --address for memory or data to be written back to register
         immediate_data_ex_out : out std_logic_vector(31 downto 0);
+        immediate_data_ex_out_2 : out std_logic_vector(31 downto 0);
         --register reference of current instruction to forward for writeback
         register_reference_next_stage : out std_logic_vector (4 downto 0)
     );
@@ -35,6 +37,7 @@ end component;
 
     signal instruction_next_stage_buffer : std_logic_vector(5 downto 0) := (others => '0');--TODO initialize to stall
     signal immediate_data_ex_out_buffer : std_logic_vector(31 downto 0) := (others => '0');--TODO initialize to stall
+    signal immediate_data_ex_out_buffer_2 : std_logic_vector(31 downto 0) := (others => '0');
     signal register_reference_next_stage_buffer : std_logic_vector (4 downto 0) := (others => '0');--TODO initialize to stall
     signal ex_add_output_buffer : std_logic_vector(31 downto 0);
 
@@ -51,7 +54,7 @@ begin
     port map(
         alu_input0 => immediate_data_1,
         alu_input1 => immediate_data_2,
-        alu_output => immediate_data_ex_out,
+        alu_output => immediate_data_ex_out_buffer,
         alu_control => current_instruction
     );
 
@@ -61,6 +64,7 @@ begin
             --propagate unchanged values to next stage
             instruction_next_stage_buffer <= current_instruction;
             register_reference_next_stage_buffer <= register_reference_current;
+            immediate_data_ex_out_buffer_2 <= immediate_data_3;
             -- TODO logic for the EX stage. Write the values for the next stage on the buffer signals.
             -- Because signal values are only updated at the end of the process, those values will be available to MEM on the next clock cycle only
         end if;
@@ -68,6 +72,7 @@ begin
 
     instruction_next_stage <= instruction_next_stage_buffer;
     immediate_data_ex_out <= immediate_data_ex_out_buffer;
+    immediate_data_ex_out_2 <= immediate_data_ex_out_buffer_2;
     register_reference_next_stage <= register_reference_next_stage_buffer;
 
 end;
