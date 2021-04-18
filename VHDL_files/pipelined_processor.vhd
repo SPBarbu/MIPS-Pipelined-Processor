@@ -11,7 +11,7 @@ architecture behavior of pipelined_processor is
         port (
             clock : in std_logic;
             jump_target : in integer range 0 to RAM_SIZE - 1;
-            valid_jump_targer : in std_logic;
+            valid_jump_target : in std_logic;
             instruction_data : out std_logic_vector(31 downto 0);
             pc_next : out integer range 0 to RAM_SIZE - 1
         );
@@ -30,7 +30,7 @@ architecture behavior of pipelined_processor is
             immediate_data_3 : out std_logic_vector(31 downto 0);
             register_reference : out std_logic_vector (4 downto 0);
             jump_target : out integer range 0 to RAM_SIZE - 1;
-            valid_jump_targer : out std_logic;
+            valid_jump_target : out std_logic;
             regwritetotext : in std_logic
         );
     end component;
@@ -106,7 +106,7 @@ begin
     port map(
         clock => clock,
         jump_target => ID_IF_jump_target,
-        valid_jump_targer => ID_IF_valid_jump_target,
+        valid_jump_target => ID_IF_valid_jump_target,
         instruction_data => IF_ID_instruction_data,
         pc_next => IF_ID_pc_next
     );
@@ -124,7 +124,7 @@ begin
         immediate_data_3 => ID_EX_immediate_data_3,
         register_reference => ID_EX_register_reference,
         jump_target => ID_IF_jump_target,
-        valid_jump_targer => ID_IF_valid_jump_target,
+        valid_jump_target => ID_IF_valid_jump_target,
         regwritetotext => ground
     );
     pm_ex : EX_stage
@@ -139,7 +139,6 @@ begin
         immediate_data_ex_out => EX_MEM_immediate_data,
         immediate_data_ex_out_2 => EX_MEM_immediate_data_2,
         register_reference_next_stage => EX_MEM_register_reference
-
     );
     pm_mem : MEM_stage
     port map(

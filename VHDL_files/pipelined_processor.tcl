@@ -25,6 +25,7 @@ vlib work
 vcom instruction_memory.vhd
 vcom IF_stage.vhd
 vcom ID_stage.vhd
+vcom alu.vhd
 vcom EX_stage.vhd
 vcom MEM_stage.vhd
 vcom WB_stage.vhd

@@ -1,12 +1,11 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-USE STD.textio.all;
-USE ieee.std_logic_textio.all;
+use STD.textio.all;
+use ieee.std_logic_textio.all;
 
 entity ID_stage is
-    generic(
-        REG_NUM : integer := 32;
+    generic (
         RAM_SIZE : integer := 32768
     );
     port (
@@ -21,6 +20,8 @@ entity ID_stage is
         write_register : in std_logic;
         --program counter of next instruction ie pc+4
         pc_next : in integer range 0 to RAM_SIZE - 1;
+        -- --for writing back to file for registers
+        regwritetotext : in std_logic;
         ------------------------------------------------------------------------------
         --opcode of the instruction in case of immediate or jump, funct of instruction in case of register
         instruction_decoded : out std_logic_vector(5 downto 0);
@@ -34,10 +35,7 @@ entity ID_stage is
         --jump target for branch or jump 
         jump_target : out integer range 0 to RAM_SIZE - 1;
         --specifies if the jump target is valid
-        valid_jump_targer : out std_logic;
-
-        --for writing back to file for registers
-        regwritetotext : in std_logic
+        valid_jump_target : out std_logic
     );
 end ID_stage;
 
@@ -50,9 +48,9 @@ end ID_stage;
 --slt  = 000110
 --slti = 000111
 --and  = 001000
---or   = 001001
+--or   = 100101
 --nor  = 001010
---xor  = 001011
+--xor  = 100110
 --andi = 001100
 --ori  = 001101
 --xori = 001110
@@ -71,29 +69,28 @@ end ID_stage;
 --jal  = 011011
 
 architecture behavior of ID_stage is
-  
-    
     --buffer signals to be written to at the end of the stage for the next stage
     signal instruction_decoded_buffer : std_logic_vector(5 downto 0) := (others => '0'); --TODO initialize to stall
-	  signal internal_code_buffer : std_logic_vector(5 downto 0) := (others => '0');
     signal immediate_data_1_buffer : std_logic_vector(31 downto 0) := (others => '0'); --TODO initialize to stall
     signal immediate_data_2_buffer : std_logic_vector(31 downto 0) := (others => '0'); --TODO initialize to stall
     signal immediate_data_3_buffer : std_logic_vector(31 downto 0) := (others => '0');
     signal register_reference_buffer : std_logic_vector (4 downto 0) := (others => '0'); --TODO initialize to stall
     signal jump_target_buffer : integer range 0 to RAM_SIZE - 1 := 0;
-    signal valid_jump_targer_buffer : std_logic := '0';
+    signal valid_jump_target_buffer : std_logic := '0';
 
     --signals for registers
     --similar implementation to memory in cache project
-    type reg_file is array (REG_NUM-1 downto 0) of std_logic_vector(31 downto 0);
-    signal reg_block : reg_file;
+    type Reg_Block_Type is array (0 to 31) of std_logic_vector(31 downto 0);
+    signal reg_block : Reg_Block_Type := (others => (others => '0')); --all registers initialized to 0;
 
-	SIGNAL read_address_reg: INTEGER RANGE 0 to ram_size-1;
-	--for write back to file
-	file text_file : text open write_mode is "registers.txt";
+    signal read_address_reg : integer range 0 to ram_size - 1;
+    --for write back to file
+    file text_file : text open write_mode is "registers.txt";
 
 begin
     ID_logic_process : process (clock)
+        variable ignore_next_instruction : std_logic := '0';
+        variable temp : std_logic_vector(31 downto 0);
     begin
         if (rising_edge(clock)) then
             --propagate opcode to next stage
@@ -103,244 +100,217 @@ begin
 
             --default instruction add $r0, $r0, $r0 to stall
             instruction_decoded_buffer <= "100000"; --funct field of the add instruction
-			      internal_code_buffer <= "000001";
             immediate_data_1_buffer <= (others => '0');
             immediate_data_2_buffer <= (others => '0');
+            immediate_data_3_buffer <= (others => '0');
             register_reference_buffer <= "00000";
-            
+
             --write to reg if needed before reading
-            if (write_register = '1') then
+            if (write_register = '1' and register_reference_wb /= "00000") then
                 reg_block(to_integer(unsigned(register_reference_wb))) <= immediate_data_wb;
             end if;
 
-			--register type instruction 
-            if instruction_data(31 downto 26) = "000000" then 
-			
-				instruction_decoded_buffer <= instruction_data(5 downto 0);
-
-                if instruction_data(5 downto 0) = "100000" then --add instruction
-                    immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                    immediate_data_2_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
-                    
-					if instruction_data(15 downto 11) /= "00000" then --destination register cant be r0
-						register_reference_buffer <= instruction_data(15 downto 11);
-					end if;
-
-                elsif instruction_data(5 downto 0) = "100010" then  --sub
-                    immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                    immediate_data_2_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
-					if instruction_data(15 downto 11) /= "00000" then
-						register_reference_buffer <= instruction_data(15 downto 11); 
-					end if;
-
-                elsif instruction_data(5 downto 0) = "011000" then --mult
-                    immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                    immediate_data_2_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
-
-                elsif instruction_data(5 downto 0) = "011010" then --div
-                    immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                    immediate_data_2_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
-
-                elsif instruction_data(5 downto 0) = "101010" then  --slt
-                    immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                    immediate_data_2_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
-					if instruction_data(15 downto 11) /= "00000" then
-						register_reference_buffer <= instruction_data(15 downto 11); 
-					end if;
-
-                elsif instruction_data(5 downto 0) = "100100" then  --and
-                    immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                    immediate_data_2_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
-					if instruction_data(15 downto 11) /= "00000" then
-						register_reference_buffer <= instruction_data(15 downto 11); 
-					end if;
-
-                elsif instruction_data(5 downto 0) = "100101" then  --or
-                    immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                    immediate_data_2_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
-					if instruction_data(15 downto 11) /= "00000" then
-						register_reference_buffer <= instruction_data(15 downto 11); 
-					end if;
-
-                elsif instruction_data(5 downto 0) = "100111" then  --nor
-                    immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                    immediate_data_2_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
-					if instruction_data(15 downto 11) /= "00000" then
-						register_reference_buffer <= instruction_data(15 downto 11); 
-					end if;
-
-                elsif instruction_data(5 downto 0) = "101000" then  --xor
-                    immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                    immediate_data_2_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
-					if instruction_data(15 downto 11) /= "00000" then
-						register_reference_buffer <= instruction_data(15 downto 11); 
-					end if;
-
-                elsif instruction_data(5 downto 0) = "010000" then  --mfhi
-					if instruction_data(15 downto 11) /= "00000" then
-						register_reference_buffer <= instruction_data(15 downto 11); 
-					end if;
-
-                elsif instruction_data(5 downto 0) = "010010" then  --mflo
-					if instruction_data(15 downto 11) /= "00000" then
-						register_reference_buffer <= instruction_data(15 downto 11); 
-					end if;
-
-                elsif instruction_data(5 downto 0) = "000000" then  --sll
-                    immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                    immediate_data_2_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
-					if instruction_data(15 downto 11) /= "00000" then
-						register_reference_buffer <= instruction_data(15 downto 11); 
-					end if;
-
-                elsif instruction_data(5 downto 0) = "000010" then  --srl
-                    immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                    immediate_data_2_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
-					if instruction_data(15 downto 11) /= "00000" then
-						register_reference_buffer <= instruction_data(15 downto 11); 
-					end if;
-
-                elsif instruction_data(5 downto 0) = "000011" then  --sra
-                    immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                    immediate_data_2_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
-					if instruction_data(15 downto 11) /= "00000" then
-						register_reference_buffer <= instruction_data(15 downto 11); 
-					end if;
-
-                elsif instruction_data(5 downto 0) = "001000" then  --jr
-                    immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-					
-                end if;
-            
-			--immediate type instruction excluding jumps
-            elsif ((instruction_data(31 downto 26) /= "000000") or 
-                   (instruction_data(31 downto 26) /= "000010") or 
-                   (instruction_data(31 downto 26) /= "000011")) then
-
-				instruction_decoded_buffer <= instruction_data(31 downto 26);
-
-
-                if (instruction_data(31 downto 26) = "001000") then --addi instruction
-                    immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                    if (instruction_data(15 downto 15) = "0") then --if msb is 0, sign extend 0
+            if ignore_next_instruction = '0' then
+                --register type instruction 
+                case instruction_data(31 downto 26) is
+                    when "000000" =>
+                        case instruction_data(5 downto 0) is
+                            when "100000" => --add
+                                instruction_decoded_buffer <= instruction_data(5 downto 0);
+                                immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
+                                immediate_data_2_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
+                                register_reference_buffer <= instruction_data(15 downto 11);
+                            when "100010" => --sub
+                                instruction_decoded_buffer <= instruction_data(5 downto 0);
+                                immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
+                                immediate_data_2_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
+                                register_reference_buffer <= instruction_data(15 downto 11);
+                            when "011000" => --mult
+                                instruction_decoded_buffer <= instruction_data(5 downto 0);
+                                immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
+                                immediate_data_2_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
+                                register_reference_buffer <= instruction_data(15 downto 11);
+                            when "011010" => --div
+                                instruction_decoded_buffer <= instruction_data(5 downto 0);
+                                immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
+                                immediate_data_2_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
+                                register_reference_buffer <= instruction_data(15 downto 11);
+                            when "101010" => --slt
+                                instruction_decoded_buffer <= instruction_data(5 downto 0);
+                                immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
+                                immediate_data_2_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
+                                register_reference_buffer <= instruction_data(15 downto 11);
+                            when "100100" => --and
+                                instruction_decoded_buffer <= instruction_data(5 downto 0);
+                                immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
+                                immediate_data_2_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
+                                register_reference_buffer <= instruction_data(15 downto 11);
+                            when "100101" => --or
+                                instruction_decoded_buffer <= instruction_data(5 downto 0);
+                                immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
+                                immediate_data_2_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
+                                register_reference_buffer <= instruction_data(15 downto 11);
+                            when "100111" => --nor
+                                instruction_decoded_buffer <= instruction_data(5 downto 0);
+                                immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
+                                immediate_data_2_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
+                                register_reference_buffer <= instruction_data(15 downto 11);
+                            when "100110" => --xor
+                                instruction_decoded_buffer <= instruction_data(5 downto 0);
+                                immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
+                                immediate_data_2_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
+                                register_reference_buffer <= instruction_data(15 downto 11);
+                            when "010000" => --mfhi
+                                instruction_decoded_buffer <= instruction_data(5 downto 0);
+                                register_reference_buffer <= instruction_data(15 downto 11);
+                            when "010010" => --mflo
+                                instruction_decoded_buffer <= instruction_data(5 downto 0);
+                                register_reference_buffer <= instruction_data(15 downto 11);
+                            when "000000" => --sll
+                                instruction_decoded_buffer <= instruction_data(5 downto 0);
+                                immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
+                                immediate_data_2_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
+                                register_reference_buffer <= instruction_data(15 downto 11);
+                            when "000010" => --srl
+                                instruction_decoded_buffer <= instruction_data(5 downto 0);
+                                immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
+                                immediate_data_2_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
+                                register_reference_buffer <= instruction_data(15 downto 11);
+                            when "000011" => --sra
+                                instruction_decoded_buffer <= instruction_data(5 downto 0);
+                                immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
+                                immediate_data_2_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
+                                register_reference_buffer <= instruction_data(15 downto 11);
+                            when "001000" => --jr
+                                --set jump target to value in rs
+                                jump_target_buffer <= to_integer(unsigned(reg_block(to_integer(unsigned(instruction_data(25 downto 21))))));
+                                valid_jump_target_buffer <= '1';
+                                ignore_next_instruction := '1';--indicate will ignore next instruction to ID                            
+                            when others =>
+                                null;
+                        end case;
+                    when "001000" => --addi
+                        instruction_decoded_buffer <= instruction_data(31 downto 26);
+                        immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
+                        if (instruction_data(15 downto 15) = "0") then --if msb is 0, sign extend 0
+                            immediate_data_2_buffer <= "0000000000000000" & instruction_data(15 downto 0);
+                        elsif (instruction_data(15 downto 15) = "1") then --if msb is 1, sign extend 1
+                            immediate_data_2_buffer <= "1111111111111111" & instruction_data(15 downto 0);
+                        end if;
+                        register_reference_buffer <= instruction_data(20 downto 16);
+                    when "001010" => --slti
+                        instruction_decoded_buffer <= instruction_data(31 downto 26);
+                        immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
+                        if (instruction_data(15 downto 15) = "0") then
+                            immediate_data_2_buffer <= "0000000000000000" & instruction_data(15 downto 0);
+                        elsif (instruction_data(15 downto 15) = "1") then
+                            immediate_data_2_buffer <= "1111111111111111" & instruction_data(15 downto 0);
+                        end if;
+                        register_reference_buffer <= instruction_data(20 downto 16);
+                    when "001100" => --andi
+                        instruction_decoded_buffer <= instruction_data(31 downto 26);
+                        immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
                         immediate_data_2_buffer <= "0000000000000000" & instruction_data(15 downto 0);
-                    elsif (instruction_data(15 downto 15) = "1") then --if msb is 1, sign extend 1
-                        immediate_data_2_buffer <= "1111111111111111" & instruction_data(15 downto 0);
-                    end if;
-					if (instruction_data(20 downto 16) /= "00000") then 
-						register_reference_buffer <= instruction_data(20 downto 16); 
-					end if;
-
-                elsif (instruction_data(31 downto 26) = "001010") then  --slti
-                    immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                    if (instruction_data(15 downto 15) = "0") then 
+                        register_reference_buffer(4 downto 0) <= instruction_data(20 downto 16);
+                    when "001101" => --ori
+                        instruction_decoded_buffer <= instruction_data(31 downto 26);
+                        immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
                         immediate_data_2_buffer <= "0000000000000000" & instruction_data(15 downto 0);
-                    elsif (instruction_data(15 downto 15) = "1") then 
-                        immediate_data_2_buffer <= "1111111111111111" & instruction_data(15 downto 0);
-                    end if;
-					if (instruction_data(20 downto 16) /= "00000") then 
-						register_reference_buffer <= instruction_data(20 downto 16); 
-					end if;
-
-                elsif (instruction_data(31 downto 26) = "001100") then --andi
-                    immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                    immediate_data_2_buffer <= "0000000000000000" & instruction_data(15 downto 0);
-					if (instruction_data(20 downto 16) /= "00000") then 
-						register_reference_buffer(4 downto 0) <= instruction_data(20 downto 16); 
-					end if;
-
-                elsif (instruction_data(31 downto 26) = "011010") then --ori
-                    immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                    immediate_data_2_buffer <= "0000000000000000" & instruction_data(15 downto 0);
-                    if (instruction_data(20 downto 16) /= "00000") then 
-                        register_reference_buffer(4 downto 0) <= instruction_data(20 downto 16); 
-                    end if;
-
-                elsif (instruction_data(31 downto 26) = "101010") then  --xori
-                    immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                    immediate_data_2_buffer <= "0000000000000000" & instruction_data(15 downto 0);
-					if (instruction_data(20 downto 16) /= "00000") then 
-						register_reference_buffer(4 downto 0) <= instruction_data(20 downto 16); 
-					end if;
-
-                elsif (instruction_data(31 downto 26) = "001111") then  --lui
-                    immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-					if (instruction_data(20 downto 16) /= "00000") then 
-						register_reference_buffer(4 downto 0) <= instruction_data(20 downto 16); 
-					end if;
-
-                elsif (instruction_data(31 downto 26) = "100011") then  --lw
-                    immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                    if (instruction_data(15 downto 15) = "0") then 
+                        register_reference_buffer(4 downto 0) <= instruction_data(20 downto 16);
+                    when "001110" => --xori
+                        instruction_decoded_buffer <= instruction_data(31 downto 26);
+                        immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
                         immediate_data_2_buffer <= "0000000000000000" & instruction_data(15 downto 0);
-                    elsif (instruction_data(15 downto 15) = "1") then
-                        immediate_data_2_buffer <= "1111111111111111" & instruction_data(15 downto 0);
-                    end if;
-                    --pass register reference
-                    register_reference_buffer(4 downto 0) <= instruction_data(20 downto 16);
-
-                elsif (instruction_data(31 downto 26) = "101011") then  --sw
-                    immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                    if (instruction_data(15 downto 15) = "0") then 
-                        immediate_data_2_buffer <= "0000000000000000" & instruction_data(15 downto 0);
-                    elsif (instruction_data(15 downto 15) = "1") then 
-                        immediate_data_2_buffer <= "1111111111111111" & instruction_data(15 downto 0);
-                    end if;
-                    --content of rt
-                    immediate_data_3_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
-
-				--need to make a comparison between contents of rs and rt, if equal offset by immediate value
-				--make the comparison here? and then send 1 to take the offset if rs = rt and 0 to not?
-				--similar idea for bne but for rs =/= rt
-                elsif (instruction_data(31 downto 26) = "000100") then  --beq
-                    immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                    if (instruction_data(15 downto 15) = "0") then 
-                        immediate_data_2_buffer <= "00000000000000" & instruction_data(15 downto 0) & "00";
-                    elsif (instruction_data(15 downto 15) = "1") then 
-                        immediate_data_2_buffer <= "11111111111111" & instruction_data(15 downto 0) & "00";
-                    end if;
-
-                elsif (instruction_data(31 downto 26) = "000101") then  --bne
-                    immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                    if (instruction_data(15 downto 15) = "0") then 
-                        immediate_data_2_buffer <= "00000000000000" & instruction_data(15 downto 0) & "00";
-                    elsif (instruction_data(15 downto 15) = "1") then 
-                        immediate_data_2_buffer <= "11111111111111" & instruction_data(15 downto 0) & "00";
-                    end if;
-                end if;
-            
-            elsif (instruction_data(31 downto 26) = "000010") then --j unconditional jump
-                immediate_data_1_buffer (25 downto 0) <= instruction_data(25 downto 0);
-				        instruction_decoded_buffer <= "000010";
-            
-            elsif (instruction_data(31 downto 26) = "000011") then --jal
-                immediate_data_1_buffer (25 downto 0) <= instruction_data(25 downto 0);
-				        instruction_decoded_buffer <= "000011";
-                
-            end if;    
+                        register_reference_buffer(4 downto 0) <= instruction_data(20 downto 16);
+                    when "001111" => --lui
+                        instruction_decoded_buffer <= instruction_data(31 downto 26);
+                        immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
+                        register_reference_buffer(4 downto 0) <= instruction_data(20 downto 16);
+                    when "100011" => --lw
+                        instruction_decoded_buffer <= instruction_data(31 downto 26);
+                        immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
+                        if (instruction_data(15 downto 15) = "0") then
+                            immediate_data_2_buffer <= "0000000000000000" & instruction_data(15 downto 0);
+                        elsif (instruction_data(15 downto 15) = "1") then
+                            immediate_data_2_buffer <= "1111111111111111" & instruction_data(15 downto 0);
+                        end if;
+                        --pass register reference
+                        register_reference_buffer(4 downto 0) <= instruction_data(20 downto 16);
+                    when "101011" => --sw
+                        instruction_decoded_buffer <= instruction_data(31 downto 26);
+                        immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
+                        if (instruction_data(15 downto 15) = "0") then
+                            immediate_data_2_buffer <= "0000000000000000" & instruction_data(15 downto 0);
+                        elsif (instruction_data(15 downto 15) = "1") then
+                            immediate_data_2_buffer <= "1111111111111111" & instruction_data(15 downto 0);
+                        end if;
+                        --content of rt
+                        immediate_data_3_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
+                    when "000101" => --bne
+                        --when rs = rt branch, otherwise nothing
+                        if reg_block(to_integer(unsigned(instruction_data(25 downto 21)))) /= reg_block(to_integer(unsigned(instruction_data(20 downto 16)))) then
+                            if instruction_data(15) = '0' then--sign extend
+                                jump_target_buffer <= pc_next + to_integer(unsigned(std_logic_vector'("00000000000000" & instruction_data(15 downto 0) & "00")));
+                            else
+                                jump_target_buffer <= pc_next + to_integer(unsigned(std_logic_vector'("11111111111111" & instruction_data(15 downto 0) & "00")));
+                            end if;
+                            valid_jump_target_buffer <= '1';
+                            ignore_next_instruction := '1';--indicate will ignore next instruction to ID
+                        end if;
+                    when "000100" => --beq
+                        --when rs = rt branch, otherwise nothing
+                        if reg_block(to_integer(unsigned(instruction_data(25 downto 21)))) = reg_block(to_integer(unsigned(instruction_data(20 downto 16)))) then
+                            if instruction_data(15) = '0' then--sign extend
+                                jump_target_buffer <= pc_next + to_integer(unsigned(std_logic_vector'("00000000000000" & instruction_data(15 downto 0) & "00")));
+                            else
+                                jump_target_buffer <= pc_next + to_integer(unsigned(std_logic_vector'("11111111111111" & instruction_data(15 downto 0) & "00")));
+                            end if;
+                            valid_jump_target_buffer <= '1';
+                            ignore_next_instruction := '1';--indicate will ignore next instruction to ID
+                        end if;
+                    when "000010" => --j
+                        --set jump target to pc+4[31,28]|address|00
+                        temp := std_logic_vector(to_unsigned(pc_next, 32));
+                        jump_target_buffer <= to_integer(unsigned(std_logic_vector'(temp(31 downto 28) & instruction_data(25 downto 0) & "00")));
+                        valid_jump_target_buffer <= '1';
+                        ignore_next_instruction := '1';--indicate will ignore next instruction to ID
+                    when "000011" => --jal
+                        reg_block(31) <= std_logic_vector(to_unsigned(pc_next + 4, 32));--save pc+8 to register 31
+                        --set jump target to pc+4[31,28]|address|00
+                        temp := std_logic_vector(to_unsigned(pc_next, 32));
+                        jump_target_buffer <= to_integer(unsigned(std_logic_vector'(temp(31 downto 28) & instruction_data(25 downto 0) & "00")));
+                        valid_jump_target_buffer <= '1';
+                        ignore_next_instruction := '1';--indicate will ignore next instruction to ID
+                    when others =>
+                        null;
+                end case;
+            else
+                valid_jump_target_buffer <= '0';
+                ignore_next_instruction := '0';
+            end if;
         end if;
     end process;
-    
-     --writing back to file
-    process(regwritetotext)
-    variable row : line;
-    begin
-        if (regwritetotext = '1') then
-        --iterate for every reg  
-            for I in 0 to 31 loop
-                --write the contents of the row at I to the line variable
-                write(row, reg_block(I));
-                --write the line to the text file
-                writeline(text_file, row);
-            end loop;
-        end if;
-    end process;
- 
+
+    -- --writing back to file
+    -- process (regwritetotext)
+    --     variable row : line;
+    -- begin
+    --     if (regwritetotext = '1') then
+    --         --iterate for every reg  
+    --         for I in 0 to 31 loop
+    --             --write the contents of the row at I to the line variable
+    --             write(row, reg_block(I));
+    --             --write the line to the text file
+    --             writeline(text_file, row);
+    --         end loop;
+    --     end if;
+    -- end process;
 
     instruction_decoded <= instruction_decoded_buffer;
-    register_reference <= register_reference_buffer;
     immediate_data_1 <= immediate_data_1_buffer;
     immediate_data_2 <= immediate_data_2_buffer;
     immediate_data_3 <= immediate_data_3_buffer;
-
+    register_reference <= register_reference_buffer;
+    jump_target <= jump_target_buffer;
+    valid_jump_target <= valid_jump_target_buffer;
 end;

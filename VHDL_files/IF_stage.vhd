@@ -9,7 +9,7 @@ entity IF_stage is
         --jump target as returned for branch or jump 
         jump_target : in integer range 0 to RAM_SIZE - 1;
         --specifies if the jump target is valid
-        valid_jump_targer : in std_logic;
+        valid_jump_target : in std_logic;
         ------------------------------------------------------------------------------
         --raw instruction data to decode
         instruction_data : out std_logic_vector(31 downto 0);
@@ -42,7 +42,7 @@ begin
     IF_logic_process : process (clock)
     begin
         if (rising_edge(clock)) then
-            case valid_jump_targer is
+            case valid_jump_target is
                 when '1' =>
                     --jump when valid
                     program_counter <= jump_target;
