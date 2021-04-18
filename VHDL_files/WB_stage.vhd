@@ -7,7 +7,7 @@ entity WB_stage is
         clock : in std_logic;
         --instruction to execute currently
         current_instruction : in std_logic_vector(5 downto 0);
-        
+
         --register reference of current instruction forwarded for writeback
         register_reference_current : in std_logic_vector (4 downto 0);
         --data to be written back to register, built in mux, no need for mux component
@@ -34,11 +34,11 @@ begin
             immediate_data_wb_buffer <= immediate_data_mem_in;
             -- TODO logic for the WB stage. Write the values for the next stage on the buffer signals.
             --instructions that needs to write to register, toggle write_register to 1
-            if (current_instruction = "100000") or (current_instruction = "100010") or (current_instruction = "001000") or (current_instruction = "011000") or (current_instruction = "011010") or (current_instruction = "101010") or 
-                (current_instruction = "001010") or (current_instruction = "100100") or (current_instruction = "100101") or (current_instruction = "100111") or (current_instruction = "101000") or (current_instruction = "001100") or 
+            if ((current_instruction = "100000") or (current_instruction = "100010") or (current_instruction = "001000") or (current_instruction = "011000") or (current_instruction = "011010") or (current_instruction = "101010") or
+                (current_instruction = "001010") or (current_instruction = "100100") or (current_instruction = "100101") or (current_instruction = "100111") or (current_instruction = "101000") or (current_instruction = "001100") or
                 (current_instruction = "001101") or (current_instruction = "001110") or (current_instruction = "010000") or (current_instruction = "010010") or (current_instruction = "001111") or (current_instruction = "000000") or
-                (current_instruction = "000010") or (current_instruction = "000011")
-            then
+                (current_instruction = "000010") or (current_instruction = "000011")) and register_reference_current /= "00000"
+                then
                 write_register_buffer <= '1';
             else
                 write_register_buffer <= '0';
