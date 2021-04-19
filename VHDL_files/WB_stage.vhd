@@ -34,7 +34,8 @@ begin
             immediate_data_wb_buffer <= immediate_data_mem_in;
             -- TODO logic for the WB stage. Write the values for the next stage on the buffer signals.
             --instructions that needs to write to register, toggle write_register to 1
-            if ((current_instruction = "100000") or (current_instruction = "100010") or (current_instruction = "001000") or (current_instruction = "011000") or (current_instruction = "011010") or (current_instruction = "101010") or
+            --without mult and div since they dont return anything
+            if ((current_instruction = "100000") or (current_instruction = "100010") or (current_instruction = "001000") or (current_instruction = "101010") or
                 (current_instruction = "001010") or (current_instruction = "100100") or (current_instruction = "100101") or (current_instruction = "100111") or (current_instruction = "101000") or (current_instruction = "001100") or
                 (current_instruction = "001101") or (current_instruction = "001110") or (current_instruction = "010000") or (current_instruction = "010010") or (current_instruction = "001111") or (current_instruction = "000000") or
                 (current_instruction = "000010") or (current_instruction = "000011")) and register_reference_current /= "00000"

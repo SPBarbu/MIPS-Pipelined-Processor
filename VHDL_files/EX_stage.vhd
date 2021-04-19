@@ -35,19 +35,15 @@ architecture behavior of EX_stage is
 
     --buffer for zero of alu   
     signal ex_alu_zero_buffer : std_logic;
+    --high and low register
+    signal hi : std_logic_vector(31 downto 0);
+    signal lo : std_logic_vector(31 downto 0);
+    --for storing multiplication 
+    signal mult : std_logic_vector(63 downto 0);
  
     
 
 begin
-    --port maps
-
-    arithmetic_logic_unit : alu
-    port map(
-        immediate_data_1 => immediate_data_1,
-        immediate_data_2 => immediate_data_2,
-        immediate_data_ex_out_buffer => immediate_data_ex_out_buffer,
-        alu_control => current_instruction
-    );
 
     EX_logic_process : process (clock)
     begin
@@ -82,14 +78,13 @@ begin
                     mult <= std_logic_vector(unsigned(immediate_data_1) * unsigned(immediate_data_2));
                     hi <= mult(63 downto 32);
                     lo <= mult(31 downto 0);
-                    immediate_data_ex_out_buffer <= std_logic_vector(unsigned(immediate_data_1) * unsigned(immediate_data_2));
-                
+                    immediate_data_ex_out_buffer <= "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";               
                 --div
                 --hi register store remainder, lo register store quotient
                 when "011010" =>
                     hi <= std_logic_vector(unsigned(immediate_data_1) mod unsigned(immediate_data_2));
                     lo <= std_logic_vector(unsigned(immediate_data_1) / unsigned(immediate_data_2));
-                    immediate_data_ex_out_buffer <= std_logic_vector(unsigned(immediate_data_1) / unsigned(immediate_data_2));
+                    immediate_data_ex_out_buffer <= "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
                 
                 --slt
                 --set on less than, if input0 < input1, output 1, else 0
