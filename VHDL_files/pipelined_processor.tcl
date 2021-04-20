@@ -10,6 +10,7 @@ proc AddWaves {} {
     add wave -position end sim:/pipelined_processor/ID_EX_register_reference
     add wave -position end sim:/pipelined_processor/EX_MEM_instruction
     add wave -position end sim:/pipelined_processor/EX_MEM_immediate_data
+    add wave -position end sim:/pipelined_processor/EX_MEM_immediate_data_2
     add wave -position end sim:/pipelined_processor/EX_MEM_register_reference
     add wave -position end sim:/pipelined_processor/MEM_WB_instruction
     add wave -position end sim:/pipelined_processor/MEM_WB_immediate_data

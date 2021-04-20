@@ -39,48 +39,31 @@ architecture behavior of MEM_stage is
     signal immediate_data_mem_out_buffer : std_logic_vector(31 downto 0) := (others => '0');--TODO initialize to stall
     signal register_reference_next_stage_buffer : std_logic_vector (4 downto 0) := (others => '0');--TODO initialize to stall
 
-    --signals for memory
+    --variables for memory
     type MEM is array(ram_size - 1 downto 0) of std_logic_vector(31 downto 0);
-    signal ram_block : MEM;
+    
 
 begin
 
-    -- MEM_logic_process : process (clock)
-    -- begin
-    --     if (rising_edge(clock)) then
-    --         --propagate unchanged values to next stage
-    --         instruction_next_stage_buffer <= current_instruction;
-    --         register_reference_next_stage_buffer <= register_reference_current;
-    --         -- TODO logic for the MEM stage. Write the values for the next stage on the buffer signals.
-    --         -- Because signal values are only updated at the end of the process, those values will be available to WB on the next clock cycle only
-    --         if (current_instruction = "100000") or (current_instruction = "100010") or (current_instruction = "001000") or (current_instruction = "011000") or (current_instruction = "011010") or (current_instruction = "101010") or 
-    --         (current_instruction = "001010") or (current_instruction = "100100") or (current_instruction = "100101") or (current_instruction = "100111") or (current_instruction = "101000") or (current_instruction = "001100") or 
-    --         (current_instruction = "001101") or (current_instruction = "001110") or (current_instruction = "010000") or (current_instruction = "010010") or (current_instruction = "001111") or (current_instruction = "000000") or
-    --         (current_instruction = "000010") or (current_instruction = "000011")
-    --         then
-    --             immediate_data_mem_out_buffer <= immediate_data_mem_in;
-    --         --lw and sw write from mem to register
-    --         elsif (current_instruction = "100011") or (current_instruction = "101011") then
-    --             immediate_data_mem_out_buffer <= mem_input;
-    --         else
-    --             --set output to 32 X
-    --             immediate_data_wb_buffer <= "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
-    --         end if;
-    --     end if;
-    -- end process;
-
     --This is the main section of the SRAM model
     mem_process : process (clock)
+    variable row : line;
+    variable ram_block : MEM := (others => (others => '0')); --all ram initialized to 0
+    --for write back to file
+    file text_file : text open write_mode is "memory.txt";
     begin
-        --This is a cheap trick to initialize the SRAM in simulation
-        if (now < 1 ps) then
-            for i in 0 to ram_size - 1 loop
-                ram_block(i) <= std_logic_vector(to_unsigned(0, 32));
-            end loop;
-        end if;
-
         --This is the actual synthesizable SRAM block
-        if (clock'event and clock = '1') then
+        if (rising_edge(clock)) then
+            if (memwritetotext = '1') then
+                --iterate for every ram block 
+                for I in 0 to 8191 loop
+                    --write the contents of the row at I to the line variable
+                    write(row, ram_block(I));
+                    --write the line to the text file
+                    writeline(text_file, row);
+                end loop;
+                file_close(text_file);
+            end if;
             --propagate unchanged values to next stage
             instruction_next_stage_buffer <= current_instruction;
             register_reference_next_stage_buffer <= register_reference_current;
@@ -92,10 +75,10 @@ begin
                 then
                 immediate_data_mem_out_buffer <= immediate_data_mem_in;
                 --sw 
-            elsif (current_instruction = "100011") then
-                ram_block(to_integer(unsigned(immediate_data_mem_in))) <= immediate_data_mem_in_2;
-                --lw
             elsif (current_instruction = "101011") then
+                ram_block(to_integer(unsigned(immediate_data_mem_in))) := immediate_data_mem_in_2;
+                --lw
+            elsif (current_instruction = "100011") then
                 immediate_data_mem_out_buffer <= ram_block(to_integer(unsigned(immediate_data_mem_in)));
             else
                 --set output to 32 X
@@ -104,23 +87,12 @@ begin
         end if;
     end process;
 
-    --process for writing back to text file
-    writetotext_process : process (memwritetotext)
-        variable row : line;
-        --for write back to file
-        file text_file : text open write_mode is "memory.txt";
-    begin
-        if (memwritetotext = '1') then
-            --iterate for every ram block 
-            for I in 0 to 8191 loop
-                --write the contents of the row at I to the line variable
-                write(row, ram_block(I));
-                --write the line to the text file
-                writeline(text_file, row);
-            end loop;
-            file_close(text_file);
-        end if;
-    end process;
+    -- --process for writing back to text file
+    -- writetotext_process : process (memwritetotext)
+        
+    -- begin
+        
+    -- end process;
 
     instruction_next_stage <= instruction_next_stage_buffer;
     immediate_data_mem_out <= immediate_data_mem_out_buffer;
