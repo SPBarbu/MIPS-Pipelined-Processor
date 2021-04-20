@@ -81,9 +81,7 @@ architecture behavior of ID_stage is
     --signals for registers
     --similar implementation to memory in cache project
     type Reg_Block_Type is array (0 to 31) of std_logic_vector(31 downto 0);
-    signal reg_block : Reg_Block_Type := (others => (others => '0')); --all registers initialized to 0;
 
-    signal read_address_reg : integer range 0 to ram_size - 1;
     --for write back to file
     file text_file : text open write_mode is "registers.txt";
 
@@ -91,6 +89,7 @@ begin
     ID_logic_process : process (clock)
         variable ignore_next_instruction : std_logic := '0';
         variable temp : std_logic_vector(31 downto 0);
+        variable reg_block : Reg_Block_Type := (others => (others => '0')); --all registers initialized to 0
     begin
         if (rising_edge(clock)) then
             --propagate opcode to next stage
@@ -107,7 +106,7 @@ begin
 
             --write to reg if needed before reading
             if (write_register = '1' and register_reference_wb /= "00000") then
-                reg_block(to_integer(unsigned(register_reference_wb))) <= immediate_data_wb;
+                reg_block(to_integer(unsigned(register_reference_wb))) := immediate_data_wb;
             end if;
 
             if ignore_next_instruction = '0' then
@@ -275,7 +274,7 @@ begin
                         valid_jump_target_buffer <= '1';
                         ignore_next_instruction := '1';--indicate will ignore next instruction to ID
                     when "000011" => --jal
-                        reg_block(31) <= std_logic_vector(to_unsigned(pc_next + 4, 32));--save pc+8 to register 31
+                        reg_block(31) := std_logic_vector(to_unsigned(pc_next + 4, 32));--save pc+8 to register 31
                         --set jump target to pc+4[31,28]|address|00
                         temp := std_logic_vector(to_unsigned(pc_next, 32));
                         jump_target_buffer <= to_integer(unsigned(std_logic_vector'(temp(31 downto 28) & instruction_data(25 downto 0) & "00")));
