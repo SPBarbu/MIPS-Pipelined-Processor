@@ -17,6 +17,7 @@ proc AddWaves {} {
     add wave -position end sim:/pipelined_processor/WB_ID_immediate_data
     add wave -position end sim:/pipelined_processor/WB_ID_register_reference
     add wave -position end sim:/pipelined_processor/WB_ID_write_register
+    add wave -position end sim:/pipelined_processor/stall
 }
 
 vlib work
@@ -38,4 +39,4 @@ force -deposit clock 0 0 ns, 1 0.5 ns -repeat 1 ns
 
 AddWaves
 
-run 10ns
+run 15ns

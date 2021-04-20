@@ -22,6 +22,8 @@ entity ID_stage is
         pc_next : in integer range 0 to RAM_SIZE - 1;
         -- --for writing back to file for registers
         regwritetotext : in std_logic;
+        --for stalling
+        id_stall : in std_logic;
         ------------------------------------------------------------------------------
         --opcode of the instruction in case of immediate or jump, funct of instruction in case of register
         instruction_decoded : out std_logic_vector(5 downto 0);
@@ -122,7 +124,7 @@ begin
                 reg_block(to_integer(unsigned(register_reference_wb))) := immediate_data_wb;
             end if;
 
-            if ignore_next_instruction = '0' then
+            if (ignore_next_instruction = '0') and (id_stall = '0') then
                 --register type instruction 
                 case instruction_data(31 downto 26) is
                     when "000000" =>

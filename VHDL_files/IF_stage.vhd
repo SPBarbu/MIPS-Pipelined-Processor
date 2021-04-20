@@ -53,19 +53,17 @@ begin
                     if (if_stall = '1') then
                         program_counter <= program_counter;
                     else 
-                    program_counter <= program_counter + 4;
+                        program_counter <= program_counter + 4;
+                    
                     end if;
             end case;
+            
             -- TODO logic for the IF stage. Write the values for the next stage on the buffer signals
             -- Because signal values are only updated at the end of the process, those values will be available to ID on the next clock cycle only
         end if;
     end process;
-    --if there is stall, dont increment counter
-    if (if_stall = '1') then
-        pc_next <= program_counter;
-    else
-        pc_next <= program_counter + 4;
-    end if;
+    
+    pc_next <= program_counter +4;
     instruction_data <= instruction_data_buffer;
 
 end;

@@ -75,7 +75,7 @@ begin
         --This is a cheap trick to initialize the SRAM in simulation
         if (now < 1 ps) then
             for i in 0 to ram_size - 1 loop
-                ram_block(i) <= std_logic_vector(to_unsigned(i, 32));
+                ram_block(i) <= std_logic_vector(to_unsigned(0, 32));
             end loop;
         end if;
 

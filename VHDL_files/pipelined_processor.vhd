@@ -13,7 +13,8 @@ architecture behavior of pipelined_processor is
             jump_target : in integer range 0 to RAM_SIZE - 1;
             valid_jump_target : in std_logic;
             instruction_data : out std_logic_vector(31 downto 0);
-            pc_next : out integer range 0 to RAM_SIZE - 1
+            pc_next : out integer range 0 to RAM_SIZE - 1;
+            if_stall : in std_logic
         );
     end component;
     component ID_stage is
@@ -31,7 +32,8 @@ architecture behavior of pipelined_processor is
             register_reference : out std_logic_vector (4 downto 0);
             jump_target : out integer range 0 to RAM_SIZE - 1;
             valid_jump_target : out std_logic;
-            regwritetotext : in std_logic
+            regwritetotext : in std_logic;
+            id_stall : in std_logic
         );
     end component;
     component EX_stage is
@@ -97,7 +99,7 @@ architecture behavior of pipelined_processor is
     signal WB_ID_write_register : std_logic;
     signal ground : std_logic := '0';
     --stalling signals
-    signal IF_stall : std_logic := '0';
+    signal stall : std_logic := '0';
     --BTW:to monitor a signal from a component:
     -->expose it as an output of the component
     -->add a reference signal here
@@ -111,7 +113,7 @@ begin
         valid_jump_target => ID_IF_valid_jump_target,
         instruction_data => IF_ID_instruction_data,
         pc_next => IF_ID_pc_next,
-        if_stall => IF_stall
+        if_stall => stall
     );
     pm_id : ID_stage
     port map(
@@ -128,7 +130,8 @@ begin
         register_reference => ID_EX_register_reference,
         jump_target => ID_IF_jump_target,
         valid_jump_target => ID_IF_valid_jump_target,
-        regwritetotext => ground
+        regwritetotext => ground,
+        id_stall => stall
     );
     pm_ex : EX_stage
     port map(
@@ -167,56 +170,85 @@ begin
     );
 
     clock_process : process
+    --variables for the registers in ID
+    variable rs : std_logic_vector(4 downto 0);
+    variable rt : std_logic_vector(4 downto 0);
+    variable rd : std_logic_vector(4 downto 0);
     begin
         --TODO remove. Keep only while testing
         --simulate clock
         clock <= '0';
+        rs := IF_ID_instruction_data(25 downto 21);
+        rt := IF_ID_instruction_data(20 downto 16);
+        rd := IF_ID_instruction_data(15 downto 11);
+        --if register op, check rs, rt, rd in EX, MEM, and WB stage for hazard excluding jump
+        if ((IF_ID_instruction_data(31 downto 26) = "000000" )and (IF_ID_instruction_data(5 downto 0) /= "001000" )) then
+            if ((rs = ID_EX_register_reference) or (rt = ID_EX_register_reference) or (rd = ID_EX_register_reference) or
+            (rs = EX_MEM_register_reference) or (rt = EX_MEM_register_reference) or (rd = EX_MEM_register_reference) or
+            (rs = MEM_WB_register_reference) or (rs = MEM_WB_register_reference) or (rd = MEM_WB_register_reference) or (rs = WB_ID_register_reference)
+            or (rt = WB_ID_register_reference) or (rd = WB_ID_register_reference)) and (rs /= "00000") then
+                stall <= '1';
+            else
+                stall <= '0';
+            end if;
+        -- if immediate op not including jumps
+        elsif (IF_ID_instruction_data(31 downto 26) /= "000010") and (IF_ID_instruction_data(31 downto 26) /= "000011") then
+            if ((rs = ID_EX_register_reference) or (rt = ID_EX_register_reference) or
+            (rs = EX_MEM_register_reference) or (rt = EX_MEM_register_reference) or
+            (rs = MEM_WB_register_reference) or (rs = MEM_WB_register_reference) or (rs = WB_ID_register_reference) or (rt = WB_ID_register_reference)) and (rs /= "00000") then
+                stall <= '1';
+            else
+                stall <= '0';
+            end if;
+        end if;
         wait for clock_period/2;
         clock <= '1';
+        stall <='0';
         wait for clock_period/2;
+        
     end process;
 
     write_reg : process
     begin
-        wait for 9 ns;
+        wait for 12 ns;
         ground <= '1';
         wait for clock_period/2;
         ground <= '0';
         wait;
     end process;
 
-    stall_process : process(clock)
-    --variables for the registers in ID
-    variable rs : std_logic_vector(31 downto 0);
-    variable rt : std_logic_vector(31 downto 0);
-    variable rd : std_logic_vector(31 downto 0);
-    begin
-        --sign
-        if (rising_edge(clock)) then
-            rs := IF_ID_instruction_data(25 downto 21);
-            rt := IF_ID_instruction_data(20 downto 16);
-            rd := IF_ID_instruction_data(15 downto 11);
-            --if register op, check rs, rt, rd in EX, MEM, and WB stage for hazard excluding jump
-            if ((IF_ID_instruction_data(31 downto 26) = "000000" )and (IF_ID_instruction_data(5 downto 0) /= "001000" )) then
-                if ((rs = ID_EX_register_reference) or (rt = ID_EX_register_reference) or (rd = ID_EX_register_reference) or
-                (rs = EX_MEM_register_reference) or (rt = EX_MEM_register_reference) or (rd = EX_MEM_register_reference) or
-                (rs = MEM_WB_register_reference) or (rs = MEM_WB_register_reference) or (rd = MEM_WB_register_reference)) and (rs /= "00000") then
-                    IF_stall <= '1';
-                    IF_ID_instruction_data <= "00000000000000000000000000100000";
-                else
-                    IF_stall <= '0';
-                end if;
-            --if immediate op not including jumps
-            elsif (IF_ID_instruction_data(31 downto 26) /= "000010") and (IF_ID_instruction_data(31 downto 26) /= "000011") then
-                if ((rs = ID_EX_register_reference) or (rt = ID_EX_register_reference) or
-                (rs = EX_MEM_register_reference) or (rt = EX_MEM_register_reference) or
-                (rs = MEM_WB_register_reference) or (rs = MEM_WB_register_reference)) and (rs /= "00000") then
-                    IF_stall <= '1';
-                    IF_ID_instruction_data <= "00000000000000000000000000100000";
-                else
-                    IF_stall <= '0';
-                end if;
-            end if;
-        end if;
-    end process;
+    -- stall_process : process
+    -- --variables for the registers in ID
+    -- variable rs : std_logic_vector(4 downto 0);
+    -- variable rt : std_logic_vector(4 downto 0);
+    -- variable rd : std_logic_vector(4 downto 0);
+    -- begin
+    --     --sign
+    --     if (rising_edge(clock)) then
+    --         rs := IF_ID_instruction_data(25 downto 21);
+    --         rt := IF_ID_instruction_data(20 downto 16);
+    --         rd := IF_ID_instruction_data(15 downto 11);
+    --         --if register op, check rs, rt, rd in EX, MEM, and WB stage for hazard excluding jump
+    --         if ((IF_ID_instruction_data(31 downto 26) = "000000" )and (IF_ID_instruction_data(5 downto 0) /= "001000" )) then
+    --             if ((rs = ID_EX_register_reference) or (rt = ID_EX_register_reference) or (rd = ID_EX_register_reference) or
+    --             (rs = EX_MEM_register_reference) or (rt = EX_MEM_register_reference) or (rd = EX_MEM_register_reference) or
+    --             (rs = MEM_WB_register_reference) or (rs = MEM_WB_register_reference) or (rd = MEM_WB_register_reference)) and (rs /= "00000") then
+    --                 stall <= '1';
+    --                 -- IF_ID_instruction_data <= "00000000000000000000000000100000";
+    --             else
+    --                 stall <= '0';
+    --             end if;
+    --         --if immediate op not including jumps
+    --         elsif (IF_ID_instruction_data(31 downto 26) /= "000010") and (IF_ID_instruction_data(31 downto 26) /= "000011") then
+    --             if ((rs = ID_EX_register_reference) or (rt = ID_EX_register_reference) or
+    --             (rs = EX_MEM_register_reference) or (rt = EX_MEM_register_reference) or
+    --             (rs = MEM_WB_register_reference) or (rs = MEM_WB_register_reference)) and (rs /= "00000") then
+    --                 stall <= '1';
+    --                 -- IF_ID_instruction_data <= "00000000000000000000000000100000";
+    --             else
+    --                 stall <= '0';
+    --             end if;
+    --         end if;
+    --     end if;
+    -- end process;
 end;
