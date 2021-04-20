@@ -210,45 +210,10 @@ begin
 
     write_reg : process
     begin
-        wait for 12 ns;
+        wait for 999999 ns;
         ground <= '1';
-        wait for clock_period/2;
+        wait for clock_period;
         ground <= '0';
         wait;
     end process;
-
-    -- stall_process : process
-    -- --variables for the registers in ID
-    -- variable rs : std_logic_vector(4 downto 0);
-    -- variable rt : std_logic_vector(4 downto 0);
-    -- variable rd : std_logic_vector(4 downto 0);
-    -- begin
-    --     --sign
-    --     if (rising_edge(clock)) then
-    --         rs := IF_ID_instruction_data(25 downto 21);
-    --         rt := IF_ID_instruction_data(20 downto 16);
-    --         rd := IF_ID_instruction_data(15 downto 11);
-    --         --if register op, check rs, rt, rd in EX, MEM, and WB stage for hazard excluding jump
-    --         if ((IF_ID_instruction_data(31 downto 26) = "000000" )and (IF_ID_instruction_data(5 downto 0) /= "001000" )) then
-    --             if ((rs = ID_EX_register_reference) or (rt = ID_EX_register_reference) or (rd = ID_EX_register_reference) or
-    --             (rs = EX_MEM_register_reference) or (rt = EX_MEM_register_reference) or (rd = EX_MEM_register_reference) or
-    --             (rs = MEM_WB_register_reference) or (rs = MEM_WB_register_reference) or (rd = MEM_WB_register_reference)) and (rs /= "00000") then
-    --                 stall <= '1';
-    --                 -- IF_ID_instruction_data <= "00000000000000000000000000100000";
-    --             else
-    --                 stall <= '0';
-    --             end if;
-    --         --if immediate op not including jumps
-    --         elsif (IF_ID_instruction_data(31 downto 26) /= "000010") and (IF_ID_instruction_data(31 downto 26) /= "000011") then
-    --             if ((rs = ID_EX_register_reference) or (rt = ID_EX_register_reference) or
-    --             (rs = EX_MEM_register_reference) or (rt = EX_MEM_register_reference) or
-    --             (rs = MEM_WB_register_reference) or (rs = MEM_WB_register_reference)) and (rs /= "00000") then
-    --                 stall <= '1';
-    --                 -- IF_ID_instruction_data <= "00000000000000000000000000100000";
-    --             else
-    --                 stall <= '0';
-    --             end if;
-    --         end if;
-    --     end if;
-    -- end process;
 end;
