@@ -96,6 +96,8 @@ architecture behavior of pipelined_processor is
     signal WB_ID_register_reference : std_logic_vector (4 downto 0);
     signal WB_ID_write_register : std_logic;
     signal ground : std_logic := '0';
+    --stalling signals
+    signal IF_stall : std_logic := '0';
     --BTW:to monitor a signal from a component:
     -->expose it as an output of the component
     -->add a reference signal here
@@ -108,7 +110,8 @@ begin
         jump_target => ID_IF_jump_target,
         valid_jump_target => ID_IF_valid_jump_target,
         instruction_data => IF_ID_instruction_data,
-        pc_next => IF_ID_pc_next
+        pc_next => IF_ID_pc_next,
+        if_stall => IF_stall
     );
     pm_id : ID_stage
     port map(
@@ -182,4 +185,38 @@ begin
         wait;
     end process;
 
+    stall_process : process(clock)
+    --variables for the registers in ID
+    variable rs : std_logic_vector(31 downto 0);
+    variable rt : std_logic_vector(31 downto 0);
+    variable rd : std_logic_vector(31 downto 0);
+    begin
+        --sign
+        if (rising_edge(clock)) then
+            rs := IF_ID_instruction_data(25 downto 21);
+            rt := IF_ID_instruction_data(20 downto 16);
+            rd := IF_ID_instruction_data(15 downto 11);
+            --if register op, check rs, rt, rd in EX, MEM, and WB stage for hazard excluding jump
+            if ((IF_ID_instruction_data(31 downto 26) = "000000" )and (IF_ID_instruction_data(5 downto 0) /= "001000" )) then
+                if ((rs = ID_EX_register_reference) or (rt = ID_EX_register_reference) or (rd = ID_EX_register_reference) or
+                (rs = EX_MEM_register_reference) or (rt = EX_MEM_register_reference) or (rd = EX_MEM_register_reference) or
+                (rs = MEM_WB_register_reference) or (rs = MEM_WB_register_reference) or (rd = MEM_WB_register_reference)) and (rs /= "00000") then
+                    IF_stall <= '1';
+                    IF_ID_instruction_data <= "00000000000000000000000000100000";
+                else
+                    IF_stall <= '0';
+                end if;
+            --if immediate op not including jumps
+            elsif (IF_ID_instruction_data(31 downto 26) /= "000010") and (IF_ID_instruction_data(31 downto 26) /= "000011") then
+                if ((rs = ID_EX_register_reference) or (rt = ID_EX_register_reference) or
+                (rs = EX_MEM_register_reference) or (rt = EX_MEM_register_reference) or
+                (rs = MEM_WB_register_reference) or (rs = MEM_WB_register_reference)) and (rs /= "00000") then
+                    IF_stall <= '1';
+                    IF_ID_instruction_data <= "00000000000000000000000000100000";
+                else
+                    IF_stall <= '0';
+                end if;
+            end if;
+        end if;
+    end process;
 end;

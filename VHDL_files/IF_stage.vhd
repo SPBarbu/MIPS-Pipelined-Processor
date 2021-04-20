@@ -10,6 +10,8 @@ entity IF_stage is
         jump_target : in integer range 0 to RAM_SIZE - 1;
         --specifies if the jump target is valid
         valid_jump_target : in std_logic;
+        --bit for stalling
+        if_stall : in std_logic;
         ------------------------------------------------------------------------------
         --raw instruction data to decode
         instruction_data : out std_logic_vector(31 downto 0);
@@ -47,15 +49,23 @@ begin
                     --jump when valid
                     program_counter <= jump_target;
                 when others =>
-                    --increment normaly otherwise
+                    --increment normaly otherwise if no stall
+                    if (if_stall = '1') then
+                        program_counter <= program_counter;
+                    else 
                     program_counter <= program_counter + 4;
+                    end if;
             end case;
             -- TODO logic for the IF stage. Write the values for the next stage on the buffer signals
             -- Because signal values are only updated at the end of the process, those values will be available to ID on the next clock cycle only
         end if;
     end process;
-
-    pc_next <= program_counter + 4;
+    --if there is stall, dont increment counter
+    if (if_stall = '1') then
+        pc_next <= program_counter;
+    else
+        pc_next <= program_counter + 4;
+    end if;
     instruction_data <= instruction_data_buffer;
 
 end;
