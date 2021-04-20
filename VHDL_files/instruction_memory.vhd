@@ -29,8 +29,6 @@ begin
         variable line_vector : std_logic_vector (31 downto 0);
         variable line_count : integer range 0 to RAM_SIZE/4 - 1 := 0;
     begin
-        --open file
-        file_open(instructions_file, INSTRUCTIONS_FILE_NAME, read_mode);
         --until reach end of file
         while not endfile(instructions_file) loop
             --read line from file
@@ -46,6 +44,7 @@ begin
             --go to next line
             line_count := line_count + 1;
         end loop;
+        file_close(instructions_file);
         --wait infinitely
         wait;
     end process;

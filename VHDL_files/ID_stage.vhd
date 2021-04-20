@@ -90,8 +90,21 @@ begin
         variable ignore_next_instruction : std_logic := '0';
         variable temp : std_logic_vector(31 downto 0);
         variable reg_block : Reg_Block_Type := (others => (others => '0')); --all registers initialized to 0
+        variable row : line;
+        --for write back to file
+        file text_file : text open write_mode is "registers.txt";
     begin
         if (rising_edge(clock)) then
+            if (regwritetotext = '1') then
+                --iterate for every reg  
+                for I in 0 to 31 loop
+                    --write the contents of the row at I to the line variable
+                    write(row, reg_block(I));
+                    --write the line to the text file
+                    writeline(text_file, row);
+                end loop;
+                file_close(text_file);
+            end if;
             --propagate opcode to next stage
             --internal_code_buffer <= instruction_data(31 downto 26);
             -- TODO logic for the ID stage. Write the values for the next stage on the buffer signals.
@@ -249,9 +262,9 @@ begin
                         --when rs = rt branch, otherwise nothing
                         if reg_block(to_integer(unsigned(instruction_data(25 downto 21)))) /= reg_block(to_integer(unsigned(instruction_data(20 downto 16)))) then
                             if instruction_data(15) = '0' then--sign extend
-                                jump_target_buffer <= pc_next + to_integer(unsigned(std_logic_vector'("00000000000000" & instruction_data(15 downto 0) & "00")));
+                                jump_target_buffer <= to_integer(to_unsigned(pc_next, 32) + unsigned(std_logic_vector'("00000000000000" & instruction_data(15 downto 0) & "00")));
                             else
-                                jump_target_buffer <= pc_next + to_integer(unsigned(std_logic_vector'("11111111111111" & instruction_data(15 downto 0) & "00")));
+                                jump_target_buffer <= to_integer(to_unsigned(pc_next, 32) + unsigned(std_logic_vector'("11111111111111" & instruction_data(15 downto 0) & "00")));
                             end if;
                             valid_jump_target_buffer <= '1';
                             ignore_next_instruction := '1';--indicate will ignore next instruction to ID
@@ -260,9 +273,9 @@ begin
                         --when rs = rt branch, otherwise nothing
                         if reg_block(to_integer(unsigned(instruction_data(25 downto 21)))) = reg_block(to_integer(unsigned(instruction_data(20 downto 16)))) then
                             if instruction_data(15) = '0' then--sign extend
-                                jump_target_buffer <= pc_next + to_integer(unsigned(std_logic_vector'("00000000000000" & instruction_data(15 downto 0) & "00")));
+                                jump_target_buffer <= to_integer(to_unsigned(pc_next, 32) + unsigned(std_logic_vector'("00000000000000" & instruction_data(15 downto 0) & "00")));
                             else
-                                jump_target_buffer <= pc_next + to_integer(unsigned(std_logic_vector'("11111111111111" & instruction_data(15 downto 0) & "00")));
+                                jump_target_buffer <= to_integer(to_unsigned(pc_next, 32) + unsigned(std_logic_vector'("11111111111111" & instruction_data(15 downto 0) & "00")));
                             end if;
                             valid_jump_target_buffer <= '1';
                             ignore_next_instruction := '1';--indicate will ignore next instruction to ID
@@ -289,21 +302,6 @@ begin
             end if;
         end if;
     end process;
-
-    -- --writing back to file
-    -- process (regwritetotext)
-    --     variable row : line;
-    -- begin
-    --     if (regwritetotext = '1') then
-    --         --iterate for every reg  
-    --         for I in 0 to 31 loop
-    --             --write the contents of the row at I to the line variable
-    --             write(row, reg_block(I));
-    --             --write the line to the text file
-    --             writeline(text_file, row);
-    --         end loop;
-    --     end if;
-    -- end process;
 
     instruction_decoded <= instruction_decoded_buffer;
     immediate_data_1 <= immediate_data_1_buffer;

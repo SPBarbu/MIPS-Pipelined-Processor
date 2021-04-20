@@ -173,4 +173,13 @@ begin
         wait for clock_period/2;
     end process;
 
+    write_reg : process
+    begin
+        wait for 9 ns;
+        ground <= '1';
+        wait for clock_period/2;
+        ground <= '0';
+        wait;
+    end process;
+
 end;

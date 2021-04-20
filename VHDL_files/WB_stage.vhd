@@ -7,7 +7,6 @@ entity WB_stage is
         clock : in std_logic;
         --instruction to execute currently
         current_instruction : in std_logic_vector(5 downto 0);
-
         --register reference of current instruction forwarded for writeback
         register_reference_current : in std_logic_vector (4 downto 0);
         --data to be written back to register, built in mux, no need for mux component
