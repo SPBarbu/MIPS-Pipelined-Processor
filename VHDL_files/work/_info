@@ -16,7 +16,7 @@ L5
 V3bV7o]>eGM=]km]e^O>Bl1
 Z7 OV;C;10.1d;51
 32
-Z8 !s108 1619045807.619000
+Z8 !s108 1619046807.167000
 Z9 !s90 -reportprogress|300|EX_stage.vhd|
 Z10 !s107 EX_stage.vhd|
 o-O0
@@ -54,7 +54,7 @@ L7
 VYlKCQ]ITnHKN93C:2oVW^2
 R7
 32
-Z16 !s108 1619045807.179000
+Z16 !s108 1619046806.728000
 Z17 !s90 -reportprogress|300|ID_stage.vhd|
 Z18 !s107 ID_stage.vhd|
 o-O0
@@ -92,7 +92,7 @@ L5
 VQQPNR5V`f;NLWa_R:AV_g2
 R7
 32
-Z22 !s108 1619045806.820000
+Z22 !s108 1619046806.322000
 Z23 !s90 -reportprogress|300|IF_stage.vhd|
 Z24 !s107 IF_stage.vhd|
 o-O0
@@ -130,7 +130,7 @@ L10
 V0=[X[228?>d=QGoF8I;:E0
 R7
 32
-Z28 !s108 1619045806.376000
+Z28 !s108 1619046805.866000
 Z29 !s90 -reportprogress|300|instruction_memory.vhd|
 Z30 !s107 instruction_memory.vhd|
 o-O0
@@ -169,7 +169,7 @@ L8
 VQS;D`6eKS01nl`<J2fE[R3
 R7
 32
-Z33 !s108 1619045808.043000
+Z33 !s108 1619046807.597000
 Z34 !s90 -reportprogress|300|MEM_stage.vhd|
 Z35 !s107 MEM_stage.vhd|
 o-O0
@@ -209,7 +209,7 @@ V1e>ihYbE1M=N`@;DLSH9d3
 R7
 32
 !i10b 1
-Z39 !s108 1619045808.890000
+Z39 !s108 1619046808.375000
 Z40 !s90 -reportprogress|300|pipelined_processor.vhd|
 Z41 !s107 pipelined_processor.vhd|
 o-O0
@@ -244,7 +244,7 @@ L5
 V>VFKjMn4F^Nj_=T2AI[KG2
 R7
 32
-Z47 !s108 1619045808.480000
+Z47 !s108 1619046807.997000
 Z48 !s90 -reportprogress|300|WB_stage.vhd|
 Z49 !s107 WB_stage.vhd|
 o-O0

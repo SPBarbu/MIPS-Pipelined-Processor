@@ -289,3 +289,6 @@ Assembler/assembler_main/binary_instructions/toolset/_gitignore
 !**/work/_info
 /VHDL_files/*.mti
 /VHDL_files/*.wlf
+VHDL_files/memory.txt
+VHDL_files/program.txt
+VHDL_files/registers.txt

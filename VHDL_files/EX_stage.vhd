@@ -1,182 +1,180 @@
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
+LIBRARY ieee;
+USE ieee.std_logic_1164.ALL;
+USE ieee.numeric_std.ALL;
 
-entity EX_stage is
-    port (
-        clock : in std_logic;
+ENTITY EX_stage IS
+    PORT (
+        clock : IN STD_LOGIC;
         --instruction to execute currently
-        current_instruction : in std_logic_vector(5 downto 0);
+        current_instruction : IN STD_LOGIC_VECTOR(5 DOWNTO 0);
         --contains data for alu operations, or address for memory
-        immediate_data_1 : in std_logic_vector(31 downto 0);
-        immediate_data_2 : in std_logic_vector(31 downto 0);
-        immediate_data_3 : in std_logic_vector(31 downto 0);
+        immediate_data_1 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+        immediate_data_2 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+        immediate_data_3 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
         --register reference of current instruction forwarded for writeback
-        register_reference_current : in std_logic_vector (4 downto 0);
+        register_reference_current : IN STD_LOGIC_VECTOR (4 DOWNTO 0);
         ------------------------------------------------------------------------------
         --opcode of the current instruction forwarded to the next stage
-        instruction_next_stage : out std_logic_vector(5 downto 0);
+        instruction_next_stage : OUT STD_LOGIC_VECTOR(5 DOWNTO 0);
         --address for memory or data to be written back to register
-        immediate_data_ex_out : out std_logic_vector(31 downto 0);
-        immediate_data_ex_out_2 : out std_logic_vector(31 downto 0);
+        immediate_data_ex_out : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
+        immediate_data_ex_out_2 : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
         --register reference of current instruction to forward for writeback
-        register_reference_next_stage : out std_logic_vector (4 downto 0)
+        register_reference_next_stage : OUT STD_LOGIC_VECTOR (4 DOWNTO 0)
     );
-end EX_stage;
+END EX_stage;
 
-architecture behavior of EX_stage is
+ARCHITECTURE behavior OF EX_stage IS
 
-    signal instruction_next_stage_buffer : std_logic_vector(5 downto 0) := (others => '0');--TODO initialize to stall
-    signal immediate_data_ex_out_buffer : std_logic_vector(31 downto 0) := (others => '0');--TODO initialize to stall
-    signal immediate_data_ex_out_buffer_2 : std_logic_vector(31 downto 0) := (others => '0');
-    signal register_reference_next_stage_buffer : std_logic_vector (4 downto 0) := (others => '0');--TODO initialize to stall
-    signal ex_add_output_buffer : std_logic_vector(31 downto 0);
-
-
+    SIGNAL instruction_next_stage_buffer : STD_LOGIC_VECTOR(5 DOWNTO 0) := (OTHERS => '0');--TODO initialize to stall
+    SIGNAL immediate_data_ex_out_buffer : STD_LOGIC_VECTOR(31 DOWNTO 0) := (OTHERS => '0');--TODO initialize to stall
+    SIGNAL immediate_data_ex_out_buffer_2 : STD_LOGIC_VECTOR(31 DOWNTO 0) := (OTHERS => '0');
+    SIGNAL register_reference_next_stage_buffer : STD_LOGIC_VECTOR (4 DOWNTO 0) := (OTHERS => '0');--TODO initialize to stall
+    SIGNAL ex_add_output_buffer : STD_LOGIC_VECTOR(31 DOWNTO 0);
     --buffer for zero of alu   
-    signal ex_alu_zero_buffer : std_logic;
+    SIGNAL ex_alu_zero_buffer : STD_LOGIC;
     --high and low register
-    signal hi : std_logic_vector(31 downto 0);
-    signal lo : std_logic_vector(31 downto 0);
-begin
+    SIGNAL hi : STD_LOGIC_VECTOR(31 DOWNTO 0);
+    SIGNAL lo : STD_LOGIC_VECTOR(31 DOWNTO 0);
+BEGIN
 
-    EX_logic_process : process (clock)
-    --variable for multiplication
-    variable mult : std_logic_vector(63 downto 0);
-    begin
-        if (rising_edge(clock)) then
+    EX_logic_process : PROCESS (clock)
+        --variable for multiplication
+        VARIABLE mult : STD_LOGIC_VECTOR(63 DOWNTO 0);
+    BEGIN
+        IF (rising_edge(clock)) THEN
             --propagate unchanged values to next stage
             instruction_next_stage_buffer <= current_instruction;
             register_reference_next_stage_buffer <= register_reference_current;
             immediate_data_ex_out_buffer_2 <= immediate_data_3;
             -- TODO logic for the EX stage. Write the values for the next stage on the buffer signals.
             -- Because signal values are only updated at the end of the process, those values will be available to MEM on the next clock cycle only
-            case current_instruction is
-                --WHEN IT IS TYPE R, THE FUNCT IS PASSED INSTEAD
-                --ARITHMETIC
-                --add
-                when "100000" =>
-                    immediate_data_ex_out_buffer <= std_logic_vector(unsigned(immediate_data_1) + unsigned(immediate_data_2));
-                
-                --sub
-                when "100010" =>
-                    immediate_data_ex_out_buffer <= std_logic_vector(unsigned(immediate_data_1) - unsigned(immediate_data_2));
-                
-                --addi
-                when "001000" =>
-                    immediate_data_ex_out_buffer <= std_logic_vector(unsigned(immediate_data_1) + unsigned(immediate_data_2));
-                
-                --mult
-                --hi register store upper 32 bits, lo register store lower 32 bits of the mult
-                when "011000" =>
-                    mult := std_logic_vector(to_unsigned((to_integer(unsigned(immediate_data_1)) * to_integer(unsigned(immediate_data_2))), 64));
-                    hi <= mult(63 downto 32);
-                    lo <= mult(31 downto 0);
-                    immediate_data_ex_out_buffer <= "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";               
-                --div
-                --hi register store remainder, lo register store quotient
-                when "011010" =>
-                    hi <= std_logic_vector(unsigned(immediate_data_1) mod unsigned(immediate_data_2));
-                    lo <= std_logic_vector(unsigned(immediate_data_1) / unsigned(immediate_data_2));
+            CASE current_instruction IS
+                    --WHEN IT IS TYPE R, THE FUNCT IS PASSED INSTEAD
+                    --ARITHMETIC
+                    --add
+                WHEN "100000" =>
+                    immediate_data_ex_out_buffer <= STD_LOGIC_VECTOR(unsigned(immediate_data_1) + unsigned(immediate_data_2));
+
+                    --sub
+                WHEN "100010" =>
+                    immediate_data_ex_out_buffer <= STD_LOGIC_VECTOR(unsigned(immediate_data_1) - unsigned(immediate_data_2));
+
+                    --addi
+                WHEN "001000" =>
+                    immediate_data_ex_out_buffer <= STD_LOGIC_VECTOR(unsigned(immediate_data_1) + unsigned(immediate_data_2));
+
+                    --mult
+                    --hi register store upper 32 bits, lo register store lower 32 bits of the mult
+                WHEN "011000" =>
+                    mult := STD_LOGIC_VECTOR(to_unsigned((to_integer(unsigned(immediate_data_1)) * to_integer(unsigned(immediate_data_2))), 64));
+                    hi <= mult(63 DOWNTO 32);
+                    lo <= mult(31 DOWNTO 0);
                     immediate_data_ex_out_buffer <= "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
-                
-                --slt
-                --set on less than, if input0 < input1, output 1, else 0
-                when "101010" =>
-                    if (unsigned(immediate_data_1) < unsigned(immediate_data_2)) then
-                        immediate_data_ex_out_buffer <= std_logic_vector(to_unsigned(1, 32));
-                    else
-                        immediate_data_ex_out_buffer <= std_logic_vector(to_unsigned(0, 32));
-                    end if;
-                
-                --slti
-                --same as slt but with immediate value
-                when "001010" =>
-                    if (unsigned(immediate_data_1) < unsigned(immediate_data_2)) then
-                        immediate_data_ex_out_buffer <= std_logic_vector(to_unsigned(1, 32));
-                    else
-                        immediate_data_ex_out_buffer <= std_logic_vector(to_unsigned(0, 32));
-                    end if;
-                
-                --LOGICAL
-                --and
-                when "100100" =>
-                    immediate_data_ex_out_buffer <= immediate_data_1 and immediate_data_2;
-                
-                --or
-                when "100101" =>
-                    immediate_data_ex_out_buffer <= immediate_data_1 or immediate_data_2;
-                
-                --nor
-                when "100111" =>
-                    immediate_data_ex_out_buffer <= immediate_data_1 nor immediate_data_2;
-                
-                --xor
-                when "101000" =>
-                    immediate_data_ex_out_buffer <= immediate_data_1 xor immediate_data_2;
-                
-                --andi
-                when "001100" =>
-                    immediate_data_ex_out_buffer <= immediate_data_1 and immediate_data_2;
-                
-                --ori
-                when "001101" =>
-                    immediate_data_ex_out_buffer <= immediate_data_1 or immediate_data_2;
-                
-                --xori
-                when "001110" =>
-                    immediate_data_ex_out_buffer <= immediate_data_1 xor immediate_data_2;
-                
-                --TRANSFER
-                --mfhi
-                --read hi register
-                when "010000" =>
+                    --div
+                    --hi register store remainder, lo register store quotient
+                WHEN "011010" =>
+                    hi <= STD_LOGIC_VECTOR(unsigned(immediate_data_1) MOD unsigned(immediate_data_2));
+                    lo <= STD_LOGIC_VECTOR(unsigned(immediate_data_1) / unsigned(immediate_data_2));
+                    immediate_data_ex_out_buffer <= "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+
+                    --slt
+                    --set on less than, if immediate_data_1 < immediate_data_2, output 1, else 0
+                WHEN "101010" =>
+                    IF (unsigned(immediate_data_1) < unsigned(immediate_data_2)) THEN
+                        immediate_data_ex_out_buffer <= STD_LOGIC_VECTOR(to_unsigned(1, 32));
+                    ELSE
+                        immediate_data_ex_out_buffer <= STD_LOGIC_VECTOR(to_unsigned(0, 32));
+                    END IF;
+
+                    --slti
+                    --same as slt but with immediate value
+                WHEN "001010" =>
+                    IF (unsigned(immediate_data_1) < unsigned(immediate_data_2)) THEN
+                        immediate_data_ex_out_buffer <= STD_LOGIC_VECTOR(to_unsigned(1, 32));
+                    ELSE
+                        immediate_data_ex_out_buffer <= STD_LOGIC_VECTOR(to_unsigned(0, 32));
+                    END IF;
+
+                    --LOGICAL
+                    --and
+                WHEN "100100" =>
+                    immediate_data_ex_out_buffer <= immediate_data_1 AND immediate_data_2;
+
+                    --or
+                WHEN "100101" =>
+                    immediate_data_ex_out_buffer <= immediate_data_1 OR immediate_data_2;
+
+                    --nor
+                WHEN "100111" =>
+                    immediate_data_ex_out_buffer <= immediate_data_1 NOR immediate_data_2;
+
+                    --xor
+                WHEN "101000" =>
+                    immediate_data_ex_out_buffer <= immediate_data_1 XOR immediate_data_2;
+
+                    --andi
+                WHEN "001100" =>
+                    immediate_data_ex_out_buffer <= immediate_data_1 AND immediate_data_2;
+
+                    --ori
+                WHEN "001101" =>
+                    immediate_data_ex_out_buffer <= immediate_data_1 OR immediate_data_2;
+
+                    --xori
+                WHEN "001110" =>
+                    immediate_data_ex_out_buffer <= immediate_data_1 XOR immediate_data_2;
+
+                    --TRANSFER
+                    --mfhi
+                    --read hi register
+                WHEN "010000" =>
                     immediate_data_ex_out_buffer <= hi;
-                    
-                --mflo
-                --read lo register
-                when "010010" =>
+
+                    --mflo
+                    --read lo register
+                WHEN "010010" =>
                     immediate_data_ex_out_buffer <= lo;
-                
-                --lui
-                --upper 16 bits are input1, rest are 0
-                when "001111" =>
-                    immediate_data_ex_out_buffer <= std_logic_vector(to_unsigned(to_integer(unsigned(immediate_data_1)), 16)) & "0000000000000000";
-                
-                --SHIFT
-                --sll
-                --shift info stored in shamt bits of input1, discard (32-(32-shamt)) MSB and concatenate zeros at the end
-                when "000000" =>
-                    immediate_data_ex_out_buffer <= immediate_data_1((31 - to_integer(unsigned(immediate_data_2))) downto 0) & std_logic_vector(to_unsigned(0, to_integer(unsigned(immediate_data_2))));
-                    
-                --srl
-                --shift info stored in shamt bits of input1, discard (32-(32-shamt)) LSB and concatenate zeros at the beginning
-                when "000010" =>
-                    immediate_data_ex_out_buffer <= std_logic_vector(to_unsigned(0, to_integer(unsigned(immediate_data_2)))) & immediate_data_1(31 downto to_integer(unsigned(immediate_data_2)));
-                    
-                --sra
-                when "000011" =>
-                    --same as srl except concatenate either 0 or 1 dependning on MSB of input0
+
+                    --lui
+                    --upper 16 bits are immediate_data_2, rest are 0
+                WHEN "001111" =>
+                    immediate_data_ex_out_buffer <= STD_LOGIC_VECTOR(to_unsigned(to_integer(unsigned(immediate_data_1)), 16)) & "0000000000000000";
+
+                    --SHIFT
+                    --sll
+                    --shift info stored in immediate_data_2, discard (32-(32-shamt)) MSB and concatenate zeros at the end
+                WHEN "000000" =>
+                    immediate_data_ex_out_buffer <= immediate_data_1((31 - to_integer(unsigned(immediate_data_2))) DOWNTO 0) & STD_LOGIC_VECTOR(to_unsigned(0, to_integer(unsigned(immediate_data_2))));
+
+                    --srl
+                    --shift info stored in immediate_data_2, discard (32-(32-shamt)) LSB and concatenate zeros at the beginning
+                WHEN "000010" =>
+                    immediate_data_ex_out_buffer <= STD_LOGIC_VECTOR(to_unsigned(0, to_integer(unsigned(immediate_data_2)))) & immediate_data_1(31 DOWNTO to_integer(unsigned(immediate_data_2)));
+
+                    --sra
+                WHEN "000011" =>
+                    --same as srl except concatenate either 0 or 1 dependning on MSB of immediate_data_1
                     --adding a "" in order to be a vector to do unisgned() conversion
-                    immediate_data_ex_out_buffer <= std_logic_vector(to_unsigned(to_integer(unsigned'("" & immediate_data_1(31))), to_integer(unsigned(immediate_data_2)))) & immediate_data_1(31 downto to_integer(unsigned(immediate_data_2)));
-                --MEMORY
-                --lw
-                when "100011" =>
-                    immediate_data_ex_out_buffer <= std_logic_vector(unsigned(immediate_data_1) + unsigned(immediate_data_2));
-                    
-                --sw
-                when "101011" =>
-                    immediate_data_ex_out_buffer <= std_logic_vector(unsigned(immediate_data_1) + unsigned(immediate_data_2));
-                when others =>
-                    null;
-    
-            end case;
-        end if;
-    end process;
+                    immediate_data_ex_out_buffer <= STD_LOGIC_VECTOR(to_unsigned(to_integer(unsigned'("" & immediate_data_1(31))), to_integer(unsigned(immediate_data_2)))) & immediate_data_1(31 DOWNTO to_integer(unsigned(immediate_data_2)));
+                    --MEMORY
+                    --lw
+                WHEN "100011" =>
+                    immediate_data_ex_out_buffer <= STD_LOGIC_VECTOR(unsigned(immediate_data_1) + unsigned(immediate_data_2));
+
+                    --sw
+                WHEN "101011" =>
+                    immediate_data_ex_out_buffer <= STD_LOGIC_VECTOR(unsigned(immediate_data_1) + unsigned(immediate_data_2));
+                WHEN OTHERS =>
+                    NULL;
+
+            END CASE;
+        END IF;
+    END PROCESS;
 
     instruction_next_stage <= instruction_next_stage_buffer;
     immediate_data_ex_out <= immediate_data_ex_out_buffer;
     immediate_data_ex_out_2 <= immediate_data_ex_out_buffer_2;
     register_reference_next_stage <= register_reference_next_stage_buffer;
 
-end;
+END;
