@@ -2,7 +2,8 @@
 Created by Stefan Barbu, Michael Frajman and Shi Tong Li
 
 ## Instructions for running the code:
-- To compile and run the code run the instruction: `source pipelined_processor.tcl`. The `pipelined_processor.tcl` file contains all the commands for compilation and signal instantiation.
+- Write the desired assembly code (in binary) inside the "program.txt" file.
+- To compile and run the code run the instruction: `source pipelined_processor.tcl` in modelsim. The `pipelined_processor.tcl` file contains all the commands for compilation and signal instantiation.
 - The starting clock cycle needs to start on 0, not 1. The clock goes from low to high and must start from 0 to not skip a cycle.
 - To reset the program you have to run it again with no `program.txt` file, the memory array defaults to "0" unless a line is read in.
 
