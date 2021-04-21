@@ -4,7 +4,7 @@ K3
 cModel Technology
 dH:\ECSE425\pipelined-processor\VHDL_files
 Eex_stage
-Z0 w1618954371
+Z0 w1619044305
 Z1 DPx4 ieee 11 numeric_std 0 22 O3PF8EB`?j9=z7KT`fn941
 Z2 DPx3 std 6 textio 0 22 5>J:;AW>W0[[dW0I6EN1Q0
 Z3 DPx4 ieee 14 std_logic_1164 0 22 5=aWaoGZSMWIcH0i^f`XF1
@@ -16,7 +16,7 @@ L5
 V3bV7o]>eGM=]km]e^O>Bl1
 Z7 OV;C;10.1d;51
 32
-Z8 !s108 1618956805.037000
+Z8 !s108 1619045807.619000
 Z9 !s90 -reportprogress|300|EX_stage.vhd|
 Z10 !s107 EX_stage.vhd|
 o-O0
@@ -28,9 +28,9 @@ R1
 R2
 R3
 DEx4 work 8 ex_stage 0 22 3bV7o]>eGM=]km]e^O>Bl1
-l46
+l41
 L27
-Vh7;IkUk6I4CA];n`SDYQ91
+VzDb6`gUBQ_Gl5Lk6k9=WR1
 R7
 32
 R8
@@ -38,10 +38,10 @@ R9
 R10
 o-O0
 R11
-!s100 AGmhg64h<PHg0Y61dkaNQ0
+!s100 W95B9cH>lV97911Bn9Na`2
 !i10b 1
 Eid_stage
-Z12 w1618948463
+Z12 w1619045416
 Z13 DPx4 ieee 16 std_logic_textio 0 22 ?Il0a149GV276[?[UMDWh2
 R1
 R2
@@ -54,7 +54,7 @@ L7
 VYlKCQ]ITnHKN93C:2oVW^2
 R7
 32
-Z16 !s108 1618956804.559000
+Z16 !s108 1619045807.179000
 Z17 !s90 -reportprogress|300|ID_stage.vhd|
 Z18 !s107 ID_stage.vhd|
 o-O0
@@ -69,7 +69,7 @@ R3
 DEx4 work 8 id_stage 0 22 YlKCQ]ITnHKN93C:2oVW^2
 l90
 L73
-Vf^X9EjNz^oNSLQfZ^jDYX0
+V?Qnf35HRH9c=G6lTB_nng3
 R7
 32
 R16
@@ -77,10 +77,10 @@ R17
 R18
 o-O0
 R11
-!s100 1W?AR0Um]^0NIVU8RoRLS2
+!s100 Pl60i38EO0MiU@g7ZLkWn0
 !i10b 1
 Eif_stage
-Z19 w1618938006
+Z19 w1619037283
 R1
 R2
 R3
@@ -92,7 +92,7 @@ L5
 VQQPNR5V`f;NLWa_R:AV_g2
 R7
 32
-Z22 !s108 1618956804.099000
+Z22 !s108 1619045806.820000
 Z23 !s90 -reportprogress|300|IF_stage.vhd|
 Z24 !s107 IF_stage.vhd|
 o-O0
@@ -130,7 +130,7 @@ L10
 V0=[X[228?>d=QGoF8I;:E0
 R7
 32
-Z28 !s108 1618956803.682000
+Z28 !s108 1619045806.376000
 Z29 !s90 -reportprogress|300|instruction_memory.vhd|
 Z30 !s107 instruction_memory.vhd|
 o-O0
@@ -156,22 +156,22 @@ R11
 !s100 1onk`Saf?1^F`F8dOSR@B2
 !i10b 1
 Emem_stage
-Z31 w1618955191
+R19
 R13
 R1
 R2
 R3
 R4
-Z32 8MEM_stage.vhd
-Z33 FMEM_stage.vhd
+Z31 8MEM_stage.vhd
+Z32 FMEM_stage.vhd
 l0
 L8
 VQS;D`6eKS01nl`<J2fE[R3
 R7
 32
-Z34 !s108 1618956805.438000
-Z35 !s90 -reportprogress|300|MEM_stage.vhd|
-Z36 !s107 MEM_stage.vhd|
+Z33 !s108 1619045808.043000
+Z34 !s90 -reportprogress|300|MEM_stage.vhd|
+Z35 !s107 MEM_stage.vhd|
 o-O0
 R11
 !s100 4;4nNWhJ>Ge;ZZ8dchhg?0
@@ -187,21 +187,21 @@ L36
 V05G2SK`CBZ3DG5egK52=S2
 R7
 32
+R33
 R34
 R35
-R36
 o-O0
 R11
 !s100 S[X]WLSL`l6]P:205HVkm0
 !i10b 1
 Epipelined_processor
-Z37 w1618950911
+Z36 w1619045232
 R1
 R2
 R3
 R4
-Z38 8pipelined_processor.vhd
-Z39 Fpipelined_processor.vhd
+Z37 8pipelined_processor.vhd
+Z38 Fpipelined_processor.vhd
 l0
 L5
 V1e>ihYbE1M=N`@;DLSH9d3
@@ -209,26 +209,26 @@ V1e>ihYbE1M=N`@;DLSH9d3
 R7
 32
 !i10b 1
-Z40 !s108 1618956806.309000
-Z41 !s90 -reportprogress|300|pipelined_processor.vhd|
-Z42 !s107 pipelined_processor.vhd|
+Z39 !s108 1619045808.890000
+Z40 !s90 -reportprogress|300|pipelined_processor.vhd|
+Z41 !s107 pipelined_processor.vhd|
 o-O0
 R11
 Abehavior
 R1
 R2
 R3
-Z43 DEx4 work 19 pipelined_processor 0 22 1e>ihYbE1M=N`@;DLSH9d3
+Z42 DEx4 work 19 pipelined_processor 0 22 1e>ihYbE1M=N`@;DLSH9d3
 l108
 L9
-Z44 VQZZiCOgMEeIAHmBZj0I=X0
-Z45 !s100 D02T3HKzfG0QV_[[;X8AZ1
+Z43 V_[NDWZnL[2[gaz@oV4Z[T2
+Z44 !s100 S^@dWfI>9TnD6m>Xz__;g3
 R7
 32
 !i10b 1
+R39
 R40
 R41
-R42
 o-O0
 R11
 Ewb_stage
@@ -237,16 +237,16 @@ R1
 R2
 R3
 R4
-Z46 8WB_stage.vhd
-Z47 FWB_stage.vhd
+Z45 8WB_stage.vhd
+Z46 FWB_stage.vhd
 l0
 L5
 V>VFKjMn4F^Nj_=T2AI[KG2
 R7
 32
-Z48 !s108 1618956805.872000
-Z49 !s90 -reportprogress|300|WB_stage.vhd|
-Z50 !s107 WB_stage.vhd|
+Z47 !s108 1619045808.480000
+Z48 !s90 -reportprogress|300|WB_stage.vhd|
+Z49 !s107 WB_stage.vhd|
 o-O0
 R11
 !s100 5jmOVVkU^nk8DoK1Q2LU81
@@ -262,9 +262,9 @@ V3VCj5fcj4X1On^F8QFgZb2
 !s100 gf]oAEJAN4MPeW3X[[[OX1
 R7
 32
+R47
 R48
 R49
-R50
 o-O0
 R11
 !i10b 1

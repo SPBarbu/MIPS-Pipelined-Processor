@@ -169,7 +169,7 @@ begin
                                 immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
                                 immediate_data_2_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
                                 register_reference_buffer <= instruction_data(15 downto 11);
-                            when "100110" => --xor
+                            when "101000" => --xor
                                 instruction_decoded_buffer <= instruction_data(5 downto 0);
                                 immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
                                 immediate_data_2_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
@@ -182,18 +182,18 @@ begin
                                 register_reference_buffer <= instruction_data(15 downto 11);
                             when "000000" => --sll
                                 instruction_decoded_buffer <= instruction_data(5 downto 0);
-                                immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                                immediate_data_2_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
+                                immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
+                                immediate_data_2_buffer <= "000000000000000000000000000" & instruction_data(10 downto 6);
                                 register_reference_buffer <= instruction_data(15 downto 11);
                             when "000010" => --srl
                                 instruction_decoded_buffer <= instruction_data(5 downto 0);
-                                immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                                immediate_data_2_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
+                                immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
+                                immediate_data_2_buffer <= "000000000000000000000000000" & instruction_data(10 downto 6);
                                 register_reference_buffer <= instruction_data(15 downto 11);
                             when "000011" => --sra
                                 instruction_decoded_buffer <= instruction_data(5 downto 0);
-                                immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
-                                immediate_data_2_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
+                                immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(20 downto 16))));
+                                immediate_data_2_buffer <= "000000000000000000000000000" & instruction_data(10 downto 6);
                                 register_reference_buffer <= instruction_data(15 downto 11);
                             when "001000" => --jr
                                 --set jump target to value in rs
@@ -238,7 +238,7 @@ begin
                         register_reference_buffer(4 downto 0) <= instruction_data(20 downto 16);
                     when "001111" => --lui
                         instruction_decoded_buffer <= instruction_data(31 downto 26);
-                        immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 downto 21))));
+                        immediate_data_1_buffer <= "0000000000000000" & instruction_data(15 downto 0);
                         register_reference_buffer(4 downto 0) <= instruction_data(20 downto 16);
                     when "100011" => --lw
                         instruction_decoded_buffer <= instruction_data(31 downto 26);

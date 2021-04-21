@@ -181,21 +181,40 @@ begin
         rs := IF_ID_instruction_data(25 downto 21);
         rt := IF_ID_instruction_data(20 downto 16);
         rd := IF_ID_instruction_data(15 downto 11);
-        --if register op, check rs, rt, rd in EX, MEM, and WB stage for hazard excluding jump
-        if ((IF_ID_instruction_data(31 downto 26) = "000000" )and (IF_ID_instruction_data(5 downto 0) /= "001000" )) then
+        --if register op, check rs, rt, rd in EX, MEM, and WB stage for hazard excluding jump, mult, div and shifts
+        if ((IF_ID_instruction_data(31 downto 26) = "000000" ) and (IF_ID_instruction_data(5 downto 0) /= "001000" ) and ((IF_ID_instruction_data(5 downto 0) /= "011000") and (IF_ID_instruction_data(5 downto 0) /= "011010"
+        and (IF_ID_instruction_data(5 downto 0) /= "000000") and (IF_ID_instruction_data(5 downto 0) /= "000010") and (IF_ID_instruction_data(5 downto 0) /= "000011")))) then
             if ((rs = ID_EX_register_reference) or (rt = ID_EX_register_reference) or (rd = ID_EX_register_reference) or
             (rs = EX_MEM_register_reference) or (rt = EX_MEM_register_reference) or (rd = EX_MEM_register_reference) or
-            (rs = MEM_WB_register_reference) or (rs = MEM_WB_register_reference) or (rd = MEM_WB_register_reference) or (rs = WB_ID_register_reference)
+            (rs = MEM_WB_register_reference) or (rt = MEM_WB_register_reference) or (rd = MEM_WB_register_reference) or (rs = WB_ID_register_reference)
             or (rt = WB_ID_register_reference) or (rd = WB_ID_register_reference)) and (rs /= "00000") then
+                stall <= '1';
+            else
+                stall <= '0';
+            end if;
+        --shifts
+        elsif (IF_ID_instruction_data(31 downto 26) = "000000" ) and ((IF_ID_instruction_data(5 downto 0) = "000000") or (IF_ID_instruction_data(5 downto 0) = "000010") or (IF_ID_instruction_data(5 downto 0) = "000011")) then
+            if ((rt = ID_EX_register_reference) or (rd = ID_EX_register_reference) or
+           (rt = EX_MEM_register_reference) or (rd = EX_MEM_register_reference) or
+            (rt = MEM_WB_register_reference) or (rd = MEM_WB_register_reference)
+            or (rt = WB_ID_register_reference) or (rd = WB_ID_register_reference)) then
                 stall <= '1';
             else
                 stall <= '0';
             end if;
         -- if immediate op not including jumps
         elsif (IF_ID_instruction_data(31 downto 26) /= "000010") and (IF_ID_instruction_data(31 downto 26) /= "000011") then
-            if ((rs = ID_EX_register_reference) or (rt = ID_EX_register_reference) or
+            --lui is special, dont use rs
+            if (IF_ID_instruction_data(31 downto 26) = "001111") then
+                if  ((rt = ID_EX_register_reference) or (rt = EX_MEM_register_reference) or
+                (rt = MEM_WB_register_reference) or (rt = WB_ID_register_reference)) then
+                    stall <= '1';
+                else
+                    stall <= '0';
+                end if;
+            elsif ((rs = ID_EX_register_reference) or (rt = ID_EX_register_reference) or
             (rs = EX_MEM_register_reference) or (rt = EX_MEM_register_reference) or
-            (rs = MEM_WB_register_reference) or (rs = MEM_WB_register_reference) or (rs = WB_ID_register_reference) or (rt = WB_ID_register_reference)) and (rs /= "00000") then
+            (rs = MEM_WB_register_reference) or (rt = MEM_WB_register_reference) or (rs = WB_ID_register_reference) or (rt = WB_ID_register_reference)) and (rs /= "00000") then
                 stall <= '1';
             else
                 stall <= '0';
