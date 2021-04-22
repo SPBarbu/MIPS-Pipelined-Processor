@@ -35,9 +35,9 @@ END MEM_stage;
 
 ARCHITECTURE behavior OF MEM_stage IS
 
-    SIGNAL instruction_next_stage_buffer : STD_LOGIC_VECTOR(5 DOWNTO 0) := (OTHERS => '0');--TODO initialize to stall
-    SIGNAL immediate_data_mem_out_buffer : STD_LOGIC_VECTOR(31 DOWNTO 0) := (OTHERS => '0');--TODO initialize to stall
-    SIGNAL register_reference_next_stage_buffer : STD_LOGIC_VECTOR (4 DOWNTO 0) := (OTHERS => '0');--TODO initialize to stall
+    SIGNAL instruction_next_stage_buffer : STD_LOGIC_VECTOR(5 DOWNTO 0) := (OTHERS => '0');-- initialize to stall
+    SIGNAL immediate_data_mem_out_buffer : STD_LOGIC_VECTOR(31 DOWNTO 0) := (OTHERS => '0');-- initialize to stall
+    SIGNAL register_reference_next_stage_buffer : STD_LOGIC_VECTOR (4 DOWNTO 0) := (OTHERS => '0');-- initialize to stall
 
     --variables for memory
     TYPE MEM IS ARRAY(ram_size - 1 DOWNTO 0) OF STD_LOGIC_VECTOR(31 DOWNTO 0);

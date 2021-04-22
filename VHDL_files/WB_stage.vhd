@@ -22,18 +22,19 @@ ENTITY WB_stage IS
 END WB_stage;
 
 ARCHITECTURE behavior OF WB_stage IS
-    SIGNAL immediate_data_wb_buffer : STD_LOGIC_VECTOR(31 DOWNTO 0) := (OTHERS => '0');--TODO initialize to stall
-    SIGNAL register_reference_wb_buffer : STD_LOGIC_VECTOR(4 DOWNTO 0) := (OTHERS => '0');--TODO initialize to stall
-    SIGNAL write_register_buffer : STD_LOGIC := '0';--TODO initialize to stall
+    SIGNAL immediate_data_wb_buffer : STD_LOGIC_VECTOR(31 DOWNTO 0) := (OTHERS => '0');-- initialize to stall
+    SIGNAL register_reference_wb_buffer : STD_LOGIC_VECTOR(4 DOWNTO 0) := (OTHERS => '0');-- initialize to stall
+    SIGNAL write_register_buffer : STD_LOGIC := '0';-- initialize to stall
 BEGIN
     WB_logic_process : PROCESS (clock)
     BEGIN
         IF (rising_edge(clock)) THEN
             register_reference_wb_buffer <= register_reference_current;
             immediate_data_wb_buffer <= immediate_data_mem_in;
-            -- TODO logic for the WB stage. Write the values for the next stage on the buffer signals.
+            -- write the values for the next stage on the buffer signals.
             --instructions that needs to write to register, toggle write_register to 1
             --without mult and div since they dont return anything
+            --dont writeback if register is r0
             IF ((current_instruction = "100000") OR (current_instruction = "100010") OR (current_instruction = "001000") OR (current_instruction = "101010") OR
                 (current_instruction = "001010") OR (current_instruction = "100100") OR (current_instruction = "100101") OR (current_instruction = "100111") OR (current_instruction = "101000") OR (current_instruction = "001100") OR
                 (current_instruction = "001101") OR (current_instruction = "001110") OR (current_instruction = "010000") OR (current_instruction = "010010") OR (current_instruction = "001111") OR (current_instruction = "000000") OR

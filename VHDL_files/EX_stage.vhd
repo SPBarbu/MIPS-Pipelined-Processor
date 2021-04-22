@@ -26,10 +26,10 @@ END EX_stage;
 
 ARCHITECTURE behavior OF EX_stage IS
 
-    SIGNAL instruction_next_stage_buffer : STD_LOGIC_VECTOR(5 DOWNTO 0) := (OTHERS => '0');--TODO initialize to stall
-    SIGNAL immediate_data_ex_out_buffer : STD_LOGIC_VECTOR(31 DOWNTO 0) := (OTHERS => '0');--TODO initialize to stall
+    SIGNAL instruction_next_stage_buffer : STD_LOGIC_VECTOR(5 DOWNTO 0) := (OTHERS => '0');-- initialize to stall
+    SIGNAL immediate_data_ex_out_buffer : STD_LOGIC_VECTOR(31 DOWNTO 0) := (OTHERS => '0');-- initialize to stall
     SIGNAL immediate_data_ex_out_buffer_2 : STD_LOGIC_VECTOR(31 DOWNTO 0) := (OTHERS => '0');
-    SIGNAL register_reference_next_stage_buffer : STD_LOGIC_VECTOR (4 DOWNTO 0) := (OTHERS => '0');--TODO initialize to stall
+    SIGNAL register_reference_next_stage_buffer : STD_LOGIC_VECTOR (4 DOWNTO 0) := (OTHERS => '0');-- initialize to stall
     SIGNAL ex_add_output_buffer : STD_LOGIC_VECTOR(31 DOWNTO 0);
     --buffer for zero of alu   
     SIGNAL ex_alu_zero_buffer : STD_LOGIC;
@@ -47,7 +47,7 @@ BEGIN
             instruction_next_stage_buffer <= current_instruction;
             register_reference_next_stage_buffer <= register_reference_current;
             immediate_data_ex_out_buffer_2 <= immediate_data_3;
-            -- TODO logic for the EX stage. Write the values for the next stage on the buffer signals.
+            -- write the values for the next stage on the buffer signals.
             -- Because signal values are only updated at the end of the process, those values will be available to MEM on the next clock cycle only
             CASE current_instruction IS
                     --WHEN IT IS TYPE R, THE FUNCT IS PASSED INSTEAD
