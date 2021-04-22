@@ -72,11 +72,11 @@ END ID_stage;
 
 ARCHITECTURE behavior OF ID_stage IS
     --buffer signals to be written to at the end of the stage for the next stage
-    SIGNAL instruction_decoded_buffer : STD_LOGIC_VECTOR(5 DOWNTO 0) := (OTHERS => '0'); --TODO initialize to stall
-    SIGNAL immediate_data_1_buffer : STD_LOGIC_VECTOR(31 DOWNTO 0) := (OTHERS => '0'); --TODO initialize to stall
-    SIGNAL immediate_data_2_buffer : STD_LOGIC_VECTOR(31 DOWNTO 0) := (OTHERS => '0'); --TODO initialize to stall
+    SIGNAL instruction_decoded_buffer : STD_LOGIC_VECTOR(5 DOWNTO 0) := (OTHERS => '0'); -- initialize to stall
+    SIGNAL immediate_data_1_buffer : STD_LOGIC_VECTOR(31 DOWNTO 0) := (OTHERS => '0'); -- initialize to stall
+    SIGNAL immediate_data_2_buffer : STD_LOGIC_VECTOR(31 DOWNTO 0) := (OTHERS => '0'); -- initialize to stall
     SIGNAL immediate_data_3_buffer : STD_LOGIC_VECTOR(31 DOWNTO 0) := (OTHERS => '0');
-    SIGNAL register_reference_buffer : STD_LOGIC_VECTOR (4 DOWNTO 0) := (OTHERS => '0'); --TODO initialize to stall
+    SIGNAL register_reference_buffer : STD_LOGIC_VECTOR (4 DOWNTO 0) := (OTHERS => '0'); -- initialize to stall
     SIGNAL jump_target_buffer : INTEGER RANGE 0 TO RAM_SIZE - 1 := 0;
     SIGNAL valid_jump_target_buffer : STD_LOGIC := '0';
 
@@ -108,8 +108,7 @@ BEGIN
                 file_close(text_file);
             END IF;
             --propagate opcode to next stage
-            --internal_code_buffer <= instruction_data(31 downto 26);
-            -- TODO logic for the ID stage. Write the values for the next stage on the buffer signals.
+            -- Write the values for the next stage on the buffer signals.
             -- Because signal values are only updated at the end of the process, those values will be available to EX on the next clock cycle only
 
             --default instruction add $r0, $r0, $r0 to stall
@@ -215,7 +214,7 @@ BEGIN
                     WHEN "001010" => --slti
                         instruction_decoded_buffer <= instruction_data(31 DOWNTO 26);
                         immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 DOWNTO 21))));
-                        IF (instruction_data(15 DOWNTO 15) = "0") THEN
+                        IF (instruction_data(15 DOWNTO 15) = "0") THEN--sign extend
                             immediate_data_2_buffer <= "0000000000000000" & instruction_data(15 DOWNTO 0);
                         ELSIF (instruction_data(15 DOWNTO 15) = "1") THEN
                             immediate_data_2_buffer <= "1111111111111111" & instruction_data(15 DOWNTO 0);
@@ -243,7 +242,7 @@ BEGIN
                     WHEN "100011" => --lw
                         instruction_decoded_buffer <= instruction_data(31 DOWNTO 26);
                         immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 DOWNTO 21))));
-                        IF (instruction_data(15 DOWNTO 15) = "0") THEN
+                        IF (instruction_data(15 DOWNTO 15) = "0") THEN--sign extend
                             immediate_data_2_buffer <= "0000000000000000" & instruction_data(15 DOWNTO 0);
                         ELSIF (instruction_data(15 DOWNTO 15) = "1") THEN
                             immediate_data_2_buffer <= "1111111111111111" & instruction_data(15 DOWNTO 0);
@@ -253,7 +252,7 @@ BEGIN
                     WHEN "101011" => --sw
                         instruction_decoded_buffer <= instruction_data(31 DOWNTO 26);
                         immediate_data_1_buffer <= reg_block(to_integer(unsigned(instruction_data(25 DOWNTO 21))));
-                        IF (instruction_data(15 DOWNTO 15) = "0") THEN
+                        IF (instruction_data(15 DOWNTO 15) = "0") THEN--sign extend
                             immediate_data_2_buffer <= "0000000000000000" & instruction_data(15 DOWNTO 0);
                         ELSIF (instruction_data(15 DOWNTO 15) = "1") THEN
                             immediate_data_2_buffer <= "1111111111111111" & instruction_data(15 DOWNTO 0);

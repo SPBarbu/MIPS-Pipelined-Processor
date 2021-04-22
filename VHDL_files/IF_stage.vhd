@@ -28,7 +28,7 @@ ARCHITECTURE behavior OF IF_stage IS
         );
     END COMPONENT;
 
-    SIGNAL instruction_data_buffer : STD_LOGIC_VECTOR(31 DOWNTO 0) := (OTHERS => '0');--TODO initialize to stall
+    SIGNAL instruction_data_buffer : STD_LOGIC_VECTOR(31 DOWNTO 0) := (OTHERS => '0');-- initialize to stall
     SIGNAL program_counter : INTEGER RANGE 0 TO RAM_SIZE - 1 := 0;
     SIGNAL pc_next_buffer : INTEGER RANGE 0 TO RAM_SIZE - 1 := 0;
 BEGIN
@@ -58,7 +58,7 @@ BEGIN
                     END IF;
             END CASE;
 
-            -- TODO logic for the IF stage. Write the values for the next stage on the buffer signals
+            -- Write the values for the next stage on the buffer signals
             -- Because signal values are only updated at the end of the process, those values will be available to ID on the next clock cycle only
         END IF;
     END PROCESS;
